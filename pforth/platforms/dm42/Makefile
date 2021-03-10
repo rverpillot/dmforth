@@ -39,7 +39,7 @@ PFINCLUDES = pf_all.h pf_cglue.h pf_clib.h pf_core.h pf_float.h \
 	pfcompil.h pfdicdat_arm.h pfdicdat.h pfinnrfp.h pforth.h 
 PFSOURCE = pf_cglue.c pf_clib.c pf_core.c pf_inner.c \
 	pf_io.c pf_mem.c pf_save.c \
-	pf_text.c pf_words.c pfcompil.c dm42_io.c dm42.c
+	pf_text.c pf_words.c pfcompil.c dm42.c
 
 VPATH = .:$(CSRCDIR):$(CSRCDIR)/dm42
 
