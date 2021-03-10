@@ -7,7 +7,7 @@
 
 #define MAX_BUFFER_OUT 256
 
-char bufferOut[256];
+char bufferOut[MAX_BUFFER_OUT];
 int ptr_bufferOut = 0;
 
 int sdTerminalOut(char c)
