@@ -1,0 +1,13 @@
+**/.DS_Store
+*.eo
+*.o
+pforth/platforms/unix/pfdicdat.h
+pforth/platforms/unix/pforth
+pforth/platforms/unix/pforth.dic
+pforth/platforms/unix/pforth_standalone
+pforth/platforms/win32/**/.vs
+pforth/platforms/win32/**/Debug
+pforth/platforms/win32/**/Release
+pforth/fth/fatest1.txt
+pforth/fth/pforth.dic
+
