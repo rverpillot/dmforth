@@ -2,6 +2,8 @@
 *.eo
 *.o
 *.a
+.dep
+build
 pforth/platforms/dm42/pfdicdat.h
 pforth/platforms/unix/pfdicdat.h
 pforth/platforms/unix/pforth
