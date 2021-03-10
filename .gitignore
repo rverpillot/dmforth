@@ -1,6 +1,8 @@
 **/.DS_Store
 *.eo
 *.o
+*.a
+pforth/platforms/dm42/pfdicdat.h
 pforth/platforms/unix/pfdicdat.h
 pforth/platforms/unix/pforth
 pforth/platforms/unix/pforth.dic
