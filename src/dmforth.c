@@ -133,7 +133,7 @@ void handle_dm42_states()
         reset_auto_off();
 }
 
-void buffer_add(const char *buf)
+void buffer_add(char *buf)
 {
     for (char *c = buf; *c != 0 && (ptr_bufIn - bufIn) < MAX_BUFFER_IN; c++)
     {
