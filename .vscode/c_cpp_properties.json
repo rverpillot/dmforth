@@ -7,7 +7,7 @@
                 "${workspaceFolder}/pforth/csrc"
             ],
             "defines": [],
-            "compilerPath": "/opt/homebrew/bin/arm-none-eabi-gcc"
+            "compilerPath": "arm-none-eabi-gcc"
         }
     ],
     "version": 4
