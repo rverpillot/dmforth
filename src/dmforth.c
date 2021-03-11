@@ -72,7 +72,17 @@ void lcd_display()
     fReg->newln = 0;
     const int cpl = (LCD_X - fReg->xoffs) / lcd_fontWidth(fReg); // Chars per line
     lcd_prevLn(fReg);
-    lcd_puts(fReg, bufOut);
+    if (edit)
+    {
+        lcd_putsAt(t20, 2, bufOut);
+    }
+    else
+    {
+        const int cpl = (LCD_X - t24->xoffs) / lcd_fontWidth(t24); // Chars per line
+        char out[cpl];
+        snprintf(out, sizeof(out) - 1, "%s_", bufOut);
+        lcd_putsAt(t24, 5, out);
+    }
     lcd_refresh();
 }
 
