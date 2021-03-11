@@ -9,5 +9,7 @@ void program_main()
   run_menu_item_app = run_menu_item;
   menu_line_str_app = menu_line_str;
 
+  message("Press a key to start");
+
   pfDoForth(NULL, "dm42", 1);
 }

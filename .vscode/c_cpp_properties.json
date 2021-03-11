@@ -6,7 +6,9 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/pforth/csrc"
             ],
-            "defines": [],
+            "defines": [
+                "PF_STATIC_DIC"
+            ],
             "compilerPath": "arm-none-eabi-gcc"
         }
     ],

@@ -25,6 +25,17 @@ const char **fmenu = NULL;
 // == Util functions
 // ==================================================
 
+void message(const char *msg)
+{
+    lcd_clear_buf();
+    lcd_writeClr(t24);
+    lcd_putsR(t24, "DMFORTH");
+    lcd_putsAt(t24, 4, msg);
+    lcd_refresh();
+
+    wait_for_key_press();
+}
+
 void beep(int freq, int duration)
 {
     start_buzzer_freq(freq * 1000);
@@ -54,7 +65,7 @@ void lcd_display()
     lcd_writeClr(t20);
     t20->newln = 0; // No skip to next line
 
-    lcd_putsR(t20, "dmforth");
+    lcd_putsR(t20, "DMFORTH");
 
     if (shift)
         disp_annun(330, "[SHIFT]");
@@ -72,13 +83,17 @@ void lcd_display()
     fReg->newln = 0;
     const int cpl = (LCD_X - fReg->xoffs) / lcd_fontWidth(fReg); // Chars per line
     lcd_prevLn(fReg);
-    if (edit)
+    if (!edit)
     {
-        lcd_putsAt(t20, 2, bufOut);
+        const int cpl = (LCD_X - t20->xoffs) / lcd_fontWidth(t20);
+        for (int i = 0; i < strlen(bufOut) / cpl; i++)
+        {
+            lcd_putsAt(t20, 2 + i, bufOut + (i * cpl));
+        }
     }
     else
     {
-        const int cpl = (LCD_X - t24->xoffs) / lcd_fontWidth(t24); // Chars per line
+        const int cpl = (LCD_X - t24->xoffs) / lcd_fontWidth(t24);
         char out[cpl];
         snprintf(out, sizeof(out) - 1, "%s_", bufOut);
         lcd_putsAt(t24, 5, out);
@@ -157,6 +172,8 @@ int flushOut()
 
     memset(bufOut, 0, MAX_BUFFER_OUT);
     ptr_bufOut = bufOut;
+    wait_for_key_press();
+
     return 0;
 }
 
@@ -174,6 +191,7 @@ int writeChar(char ch)
 
 int readChar(void)
 {
+    message("ReadChar");
     edit = true;
 
     for (;;)
