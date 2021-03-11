@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __PGM_MAIN_H__
 #define __PGM_MAIN_H__
 
-#define PROGRAM_NAME    "fthcalc"
+#define PROGRAM_NAME    "dmforth"
 #define PROGRAM_VERSION "0.1"
 
 #define DBG_PRINT

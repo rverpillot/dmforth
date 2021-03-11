@@ -6,17 +6,17 @@
 
 int sdTerminalOut(char c)
 {
-    return putchar(c);
+    return writeChar(c);
 }
 
 int sdTerminalEcho(char c)
 {
-    return putchar(c);
+    return writeChar(c);
 }
 
 int sdTerminalIn(void)
 {
-    return getchar();
+    return readChar();
 }
 
 int sdTerminalFlush(void)
@@ -30,4 +30,8 @@ void sdTerminalInit(void)
 
 void sdTerminalTerm(void)
 {
+}
+
+int sdQueryTerminal(void) {
+    return 0;
 }

@@ -5,16 +5,21 @@
 #include "dmforth.h"
 #include "menu.h"
 
-#define MAX_BUFFER_OUT 256
-#define MAX_BUFFER_IN 256
+#define MAX_BUFFER_OUT 255
+#define MAX_BUFFER_IN 255
 
-static char bufOut[MAX_BUFFER_OUT];
+static char bufOut[MAX_BUFFER_OUT + 1];
 static char *ptr_bufOut = bufOut;
 
-static char bufIn[MAX_BUFFER_IN];
+static char bufIn[MAX_BUFFER_IN + 1];
 static char *ptr_bufIn = bufIn;
 
 int reg_font_ix = 3;
+
+bool shift = false;
+bool edit = false;
+
+const char **fmenu = NULL;
 
 // ==================================================
 // == Util functions
@@ -39,7 +44,7 @@ void disp_annun(int xpos, const char *txt)
     t20->lnfill = 1; // Return default state
 }
 
-void lcd_display(const char **menu, bool shift)
+void lcd_display()
 {
     const int top_y_lines = lcd_lineHeight(t20);
 
@@ -57,28 +62,30 @@ void lcd_display(const char **menu, bool shift)
     t20->newln = 1; // Revert to default
 
     // == Menu ==
-    if (menu)
-        lcd_draw_menu_keys(menu);
+    if (fmenu)
+        lcd_draw_menu_keys(fmenu);
 
     // == Stack ==
     lcd_writeClr(fReg);
     lcd_switchFont(fReg, reg_font_ix);
-    fReg->y = LCD_Y - (menu ? LCD_MENU_LINES : 0);
+    fReg->y = LCD_Y - (fmenu ? LCD_MENU_LINES : 0);
     fReg->newln = 0;
     const int cpl = (LCD_X - fReg->xoffs) / lcd_fontWidth(fReg); // Chars per line
-    for (int i = 0; i < 16; i++)
-    {
-        lcd_prevLn(fReg);
-        if (fReg->y <= top_y_lines)
-            break;
-        // lcd_puts(fReg, fhcalc_stack(state->env, i));
-    }
-
+    lcd_prevLn(fReg);
+    lcd_puts(fReg, bufOut);
     lcd_refresh();
 }
 
 void handle_dm42_states()
 {
+    /*
+   Status flags:
+     ST(STAT_PGM_END)   - Indicates that program should go to off state (set by auto off timer)
+     ST(STAT_SUSPENDED) - Program signals it is ready for off and doesn't need to be woken-up again
+     ST(STAT_OFF)       - Program in off state (OS goes to sleep and only [EXIT] key can wake it up again)
+     ST(STAT_RUNNING)   - OS doesn't sleep in this mode
+  */
+
     if ((ST(STAT_PGM_END) && ST(STAT_SUSPENDED)) || // Already in off mode and suspended
         (!ST(STAT_PGM_END) && key_empty()))         // Go to sleep if no keys available
     {
@@ -128,7 +135,6 @@ void handle_dm42_states()
 
 void buffer_add(const char *buf)
 {
-    size_t size = strlen(buf);
     for (char *c = buf; *c != 0 && (ptr_bufIn - bufIn) < MAX_BUFFER_IN; c++)
     {
         *ptr_bufIn++ = *c;
@@ -137,24 +143,28 @@ void buffer_add(const char *buf)
 
 int flushOut()
 {
+    edit = false;
+
     memset(bufOut, 0, MAX_BUFFER_OUT);
     ptr_bufOut = bufOut;
     return 0;
 }
 
-int putchar(char ch)
+int writeChar(char ch)
 {
     if ((ptr_bufOut - bufOut) < MAX_BUFFER_OUT)
     {
         *ptr_bufOut++ = ch;
+        *ptr_bufOut = 0;
+        lcd_display();
         return 0;
     }
     return -1;
 }
 
-int getchar(void)
+int readChar(void)
 {
-    bool shift = false;
+    edit = true;
 
     for (;;)
     {
@@ -164,7 +174,7 @@ int getchar(void)
         {
             return *ptr_bufIn--;
         }
-        
+
         wait_for_key_release(0);
         int key = key_pop();
         if (shift)
@@ -185,6 +195,7 @@ int getchar(void)
         }
         else
         {
+            char num[2];
             switch (key)
             {
             case KEY_DOUBLE_RELEASE:
@@ -214,24 +225,23 @@ int getchar(void)
             case KEY_7:
             case KEY_8:
             case KEY_9:
-                char num[2];
                 sprintf(num, "%d", key_to_nr(key));
                 buffer_add(num);
                 break;
             case KEY_DOT:
-                buffer_add(".");
+                buffer_add(" .\n");
                 break;
             case KEY_ADD:
-                buffer_add("+");
+                buffer_add(" +\n");
                 break;
             case KEY_SUB:
-                buffer_add("-");
+                buffer_add(" -\n");
                 break;
             case KEY_MUL:
-                buffer_add("*");
+                buffer_add(" *\n");
                 break;
             case KEY_DIV:
-                buffer_add("/");
+                buffer_add(" /\n");
                 break;
 
             case KEY_ENTER:

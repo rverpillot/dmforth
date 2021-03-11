@@ -1,5 +1,5 @@
 #include "pforth.h"
 
-int putchar(char);
-int getchar(void);
+int writeChar(char);
+int readChar(void);
 int flushOut();

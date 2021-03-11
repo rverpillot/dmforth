@@ -3,6 +3,10 @@
 
 .POSIX:
 
+CC = arm-none-eabi-gcc
+AR = arm-none-eabi-gcc-ar
+
+
 
 SRCDIR       = ../..
 PFORTHDIR    = $(SRCDIR)
@@ -32,6 +36,8 @@ CCOPTS = -O2 \
 		-DPF_USER_CUSTOM \
 		-DPF_STATIC_DIC
 
+CPUFLAGS += -mthumb -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16
+
 #######################################
 PFINCLUDES = pf_all.h pf_cglue.h pf_clib.h pf_core.h pf_float.h \
 	pf_guts.h pf_host.h pf_inc1.h pf_io.h pf_mem.h pf_save.h \
@@ -44,7 +50,7 @@ PFSOURCE = pf_cglue.c pf_clib.c pf_core.c pf_inner.c \
 VPATH = .:$(CSRCDIR):$(CSRCDIR)/dm42
 
 CPPFLAGS = -I. -I $(CSRCDIR) -DPF_SUPPORT_FP -D_DEFAULT_SOURCE -D_GNU_SOURCE
-CFLAGS = $(CCOPTS)
+CFLAGS = $(CCOPTS) $(CPUFLAGS)
 
 COMPILE = $(CC) $(CFLAGS) $(CPPFLAGS)
 
@@ -59,6 +65,7 @@ all: $(PFLIB)
 
 $(PFLIB): $(PFOBJS)
 	$(AR) r $@ $?
+	cp $(PFLIB) ../../../lib/
 
 clean:
 	rm -f *.a *.o

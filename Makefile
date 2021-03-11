@@ -33,11 +33,10 @@ ASM_SOURCES = dmcp/startup_pgm.s
 #######################################
 
 # Includes
-C_INCLUDES += -Isrc -Iinc
+C_INCLUDES += -Isrc -Iinc -Ipforth/csrc
 
 # C sources
-C_SOURCES += src/main.c
-C_SOURCES += src/menu.c
+C_SOURCES += src/main.c src/menu.c src/dm42_io.c src/dmforth.c
 
 # C++ sources
 #CXX_SOURCES += src/xxx.cc
@@ -50,9 +49,9 @@ C_SOURCES += src/menu.c
 
 # Libraries
 ifeq ($(DEBUG), 1)
-LIBS += lib/libfhcalc.a
+LIBS += lib/libpforth.a
 else
-LIBS += lib/libfhcalc.a
+LIBS += lib/libpforth.a
 endif
 
 # ---
