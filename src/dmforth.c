@@ -27,13 +27,8 @@ const char **fmenu = NULL;
 
 void message(const char *msg)
 {
-    lcd_clear_buf();
-    lcd_writeClr(t24);
-    lcd_putsR(t24, "DMFORTH");
-    lcd_putsAt(t24, 4, msg);
-    lcd_refresh();
-
-    wait_for_key_press();
+    lcd_setLine(t24, 4);
+    msg_box(t24, msg, 0);
 }
 
 void beep(int freq, int duration)
@@ -62,8 +57,10 @@ void lcd_display()
     lcd_clear_buf();
 
     // == Header ==
+    t20->fixed = 0;
     lcd_writeClr(t20);
     t20->newln = 0; // No skip to next line
+    t20->fixed = 1;
 
     lcd_putsR(t20, "DMFORTH");
 
@@ -71,7 +68,7 @@ void lcd_display()
         disp_annun(330, "[SHIFT]");
 
     t20->newln = 1; // Revert to default
-
+    lcd_printAt(t20, 1, "            Free: %d", sys_free_mem());
     // == Menu ==
     if (fmenu)
         lcd_draw_menu_keys(fmenu);
@@ -85,10 +82,11 @@ void lcd_display()
     lcd_prevLn(fReg);
     if (!edit)
     {
+        t20->fixed = 1;
         const int cpl = (LCD_X - t20->xoffs) / lcd_fontWidth(t20);
-        for (int i = 0; i < strlen(bufOut) / cpl; i++)
+        for (int i = 0; i < (strlen(bufOut) / cpl) + 1; i++)
         {
-            lcd_putsAt(t20, 2 + i, bufOut + (i * cpl));
+            lcd_putsAt(t20, 4 + i, bufOut + (i * cpl));
         }
     }
     else
