@@ -58,6 +58,7 @@ void zf_abort(zf_result reason);
 void zf_push(zf_cell v);
 zf_cell zf_pop(void);
 zf_cell zf_pick(zf_addr n);
+unsigned int zf_stack_count();
 
 /* Host provides these functions */
 

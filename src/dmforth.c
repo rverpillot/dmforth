@@ -5,26 +5,26 @@
 #include "dmcp.h"
 
 #define MAX_BUFFER_OUT 255
-#define MAX_BUFFER_IN 255
 
-static char bufOut[MAX_BUFFER_OUT + 1];
-static char *ptr_bufOut = bufOut;
+char bufOut[MAX_BUFFER_OUT + 1];
+char *ptr_bufOut = bufOut;
 
-static char bufIn[MAX_BUFFER_IN + 1];
-static char *ptr_bufIn = bufIn;
-
-void buffer_add(char *buf)
+static void buffer_add(char *buf)
 {
-    for (char *c = buf; *c != 0 && (ptr_bufIn - bufIn) < MAX_BUFFER_IN; c++)
+    for (char *c = buf; *c != 0 && (ptr_bufOut - bufOut) < MAX_BUFFER_OUT; c++)
     {
-        *ptr_bufIn++ = *c;
+        *ptr_bufOut++ = *c;
+        *ptr_bufOut = 0;
     }
 }
 
 void message(const char *msg)
 {
-    lcd_setLine(t24, 4);
-    msg_box(t24, msg, 0);
+    lcd_putsAt(t24, 3, "Message:");
+    lcd_putsAt(t24, 4, msg);
+    lcd_refresh();
+    // msg_box(t24, msg, 0);
+    wait_for_key_press();
 }
 
 void beep(int freq, int duration)
@@ -41,20 +41,21 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *last_word)
         /* The core system callbacks */
 
     case ZF_SYSCALL_EMIT:
-        putchar((char)zf_pop());
-        fflush(stdout);
+        buffer_add((char)zf_pop());
+        message(bufOut);
         break;
 
     case ZF_SYSCALL_PRINT:
-        printf(ZF_CELL_FMT " ", zf_pop());
+        lcd_print(t20, ZF_CELL_FMT " ", zf_pop());
+        lcd_refresh();
         break;
 
     case ZF_SYSCALL_TELL:
     {
         zf_cell len = zf_pop();
         void *buf = (uint8_t *)zf_dump(NULL) + (int)zf_pop();
-        (void)fwrite(buf, 1, len, stdout);
-        fflush(stdout);
+        // (void)fwrite(buf, 1, len, stdout);
+        // fflush(stdout);
     }
     break;
 
@@ -70,7 +71,7 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *last_word)
         break;
 
     case ZF_SYSCALL_USER + 3:
-        save("zforth.save");
+        // save("zforth.save");
         break;
 
     default:
