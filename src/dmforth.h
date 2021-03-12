@@ -1,6 +1,3 @@
-#include "pforth.h"
 
-void message(const char *);
-int writeChar(char);
-int readChar(void);
-int flushOut();
+void message(msg const char *);
+void beep(int freq, int duration);

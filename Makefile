@@ -1,7 +1,7 @@
 ######################################
 # target
 ######################################
-TARGET = dmforth
+TARGET = DMFORTH
 
 ######################################
 # building variables
@@ -33,10 +33,10 @@ ASM_SOURCES = dmcp/startup_pgm.s
 #######################################
 
 # Includes
-C_INCLUDES += -Isrc -Iinc -Ipforth/csrc
+C_INCLUDES += -Isrc -Iinc
 
 # C sources
-C_SOURCES += src/main.c src/menu.c src/dm42_io.c src/dmforth.c
+C_SOURCES += src/main.c src/menu.c src/dmforth.c src/zforth.c 
 
 # C++ sources
 #CXX_SOURCES += src/xxx.cc
@@ -49,9 +49,9 @@ C_SOURCES += src/main.c src/menu.c src/dm42_io.c src/dmforth.c
 
 # Libraries
 ifeq ($(DEBUG), 1)
-LIBS += lib/libpforth.a
+LIBS += 
 else
-LIBS += lib/libpforth.a
+LIBS +=
 endif
 
 # ---
