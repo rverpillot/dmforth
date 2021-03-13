@@ -32,8 +32,8 @@
  * integer type that suits your needs, or 'float' or 'double' if you need
  * floating point numbers */
 
-typedef float zf_cell;
-#define ZF_CELL_FMT "%.14g"
+typedef double zf_cell;
+#define ZF_CELL_FMT "%.3f"
 
 /* The type to use for pointers and adresses. 'unsigned int' is usually a good
  * choice for best performance and smallest code size */

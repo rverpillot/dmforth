@@ -8,7 +8,6 @@
 #include "menu.h"
 #include "dmforth.h"
 #include "zforth.h"
-#include "zcore.h"
 
 #define MAX_BUFFER_IN 255
 
@@ -21,7 +20,13 @@ const char **fmenu = NULL;
 static char bufIn[MAX_BUFFER_IN + 1];
 static char *ptr_bufIn = bufIn;
 
-static void buffer_add(char *buf)
+static void buffer_reset()
+{
+    ptr_bufIn = bufIn;
+    *ptr_bufIn = 0;
+}
+
+static void buffer_add(const char *buf)
 {
     for (char *c = buf; *c != 0 && (ptr_bufIn - bufIn) < MAX_BUFFER_IN; c++)
     {
@@ -53,7 +58,7 @@ void lcd_display()
     lcd_clear_buf();
 
     t20->newln = 0;
-    lcd_printRAt(t20, 0, "DMFORTH              Stack: %d", zf_stack_count());
+    lcd_printRAt(t20, 0, "DMFORTH            Stack: %d", zf_stack_count());
 
     if (shift)
         disp_annun(330, "[SHIFT]");
@@ -69,18 +74,16 @@ void lcd_display()
     fReg->y = LCD_Y - (fmenu ? LCD_MENU_LINES : 0);
     fReg->newln = 0;
     const int cpl = (LCD_X - fReg->xoffs) / lcd_fontWidth(fReg); // Chars per line
-    lcd_prevLn(fReg);
-    for (int i = 0; i < zf_stack_count() && i < 6; i++)
+
+    for (int i = 0; i < zf_stack_count() && i < 5; i++)
     {
         char cell[32];
         zf_cell val = zf_pick(i);
         snprintf(cell, sizeof(cell), "%d: " ZF_CELL_FMT, i + 1, val);
-        lcd_putsAt(fReg, 7 - i, cell);
+        lcd_putsAt(fReg, 5 - i, cell);
     }
-    if (strlen(bufIn) > 0)
-    {
-        lcd_printAt(t24, 8, "%s_", bufIn);
-    }
+
+    lcd_printAt(fReg, 7, "%s_", bufIn);
     lcd_refresh();
 }
 
@@ -143,24 +146,17 @@ void handle_dm42_states()
 
 int eval(const char *buf)
 {
-    if (buf == NULL || strlen(buf) == 0)
+    if (buf != NULL)
     {
-        return 0;
+        buffer_add(" ");
+        buffer_add(buf);
     }
 
-    zf_result r = zf_eval(buf);
-    if (buf == bufIn)
-    {
-        ptr_bufIn = bufIn; // reset bufIn
-        *ptr_bufIn = 0;
-    }
+    int cr = zforth_eval(bufIn);
 
-    if (r != ZF_OK)
-    {
-        message("Error eval");
-        return -1;
-    }
-    return 0;
+    buffer_reset();
+
+    return cr;
 }
 
 void program_main()
@@ -169,10 +165,7 @@ void program_main()
     run_menu_item_app = run_menu_item;
     menu_line_str_app = menu_line_str;
 
-    zf_init(0);
-    zf_bootstrap();
-
-    if (eval((char *)forth_core_zf) != 0)
+    if (zforth_init() != 0)
     {
         SET_ST(STAT_MENU);
         handle_menu(&MID_MENU, MENU_RESET, 0); // App menu
@@ -180,13 +173,12 @@ void program_main()
         wait_for_key_release(-1);
     }
 
-    message("Press Key to start");
+    buffer_reset();
 
     for (;;)
     {
-        handle_dm42_states();
-
         lcd_display();
+        handle_dm42_states();
 
         wait_for_key_release(0);
         int key = key_pop();
@@ -195,12 +187,15 @@ void program_main()
             switch (key)
             {
             case KEY_SHIFT:
-                shift = !shift;
+                shift = false;
+                break;
+
+            case KEY_RDN:
+                eval("pi");
+                shift = false;
                 break;
 
             case KEY_EXIT:
-                // exit(0);
-
             case KEY_0:
                 SET_ST(STAT_MENU);
                 handle_menu(&MID_MENU, MENU_RESET, 0); // App menu
@@ -217,7 +212,7 @@ void program_main()
             case KEY_DOUBLE_RELEASE:
                 break;
             case KEY_F1:
-                run_help_file("/HELP/dmforth.html");
+                // run_help_file("/HELP/dmforth.html");
                 break;
 
             case KEY_F5: // F5 = Decrease font size
@@ -228,7 +223,7 @@ void program_main()
                 break;
 
             case KEY_SHIFT:
-                shift = !shift;
+                shift = true;
                 break;
 
             case KEY_0:
@@ -248,27 +243,31 @@ void program_main()
                 buffer_add(".");
                 break;
             case KEY_ADD:
-                buffer_add(" +");
-                eval(bufIn);
+                eval("+");
                 break;
             case KEY_SUB:
-                buffer_add(" -");
-                eval(bufIn);
+                eval("-");
                 break;
             case KEY_MUL:
-                buffer_add(" *");
-                eval(bufIn);
+                eval("*");
                 break;
             case KEY_DIV:
-                buffer_add(" /");
-                eval(bufIn);
+                eval("/");
                 break;
             case KEY_RUN:
                 buffer_add(" ");
                 break;
 
+            case KEY_SIN:
+                eval("sin");
+                break;
+
+            case KEY_COS:
+                eval("cos");
+                break;
+
             case KEY_ENTER:
-                eval(bufIn);
+                eval(NULL);
                 break;
 
             default:

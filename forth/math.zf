@@ -1,0 +1,12 @@
+( system calls )
+
+: sin     131 sys ;
+: cos     132 sys ;
+
+
+: pi 3.141592653589793238462643383279502884 ;
+
+: max  over over < if swap fi drop ;
+: min  over over > if swap fi drop ;
+
+

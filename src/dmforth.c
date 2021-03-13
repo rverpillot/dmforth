@@ -1,29 +1,19 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "zforth.h"
+#include <math.h>
 #include "dmcp.h"
+#include "dmforth.h"
 
-#define MAX_BUFFER_OUT 255
-
-char bufOut[MAX_BUFFER_OUT + 1];
-char *ptr_bufOut = bufOut;
-
-static void buffer_add(char *buf)
-{
-    for (char *c = buf; *c != 0 && (ptr_bufOut - bufOut) < MAX_BUFFER_OUT; c++)
-    {
-        *ptr_bufOut++ = *c;
-        *ptr_bufOut = 0;
-    }
-}
+#include "zcore.h"
+#include "zmath.h"
 
 void message(const char *msg)
 {
-    lcd_putsAt(t24, 3, "Message:");
-    lcd_putsAt(t24, 4, msg);
+    char buf[200];
+    snprintf(buf, 200, "%s\n\nPress any key to continue", msg);
+    msg_box(t24, buf, 0);
     lcd_refresh();
-    // msg_box(t24, msg, 0);
     wait_for_key_press();
 }
 
@@ -34,19 +24,91 @@ void beep(int freq, int duration)
     stop_buzzer();
 }
 
+int zforth_eval(const char *buf)
+{
+    if (buf == NULL || strlen(buf) == 0)
+    {
+        return 0;
+    }
+
+    zf_result r = zf_eval(buf);
+
+    char *msg;
+    switch (r)
+    {
+    case ZF_OK:
+        msg = NULL;
+        break;
+    case ZF_ABORT_INTERNAL_ERROR:
+        msg = "Internal error";
+        break;
+    case ZF_ABORT_OUTSIDE_MEM:
+        msg = "Outside memory";
+        break;
+    case ZF_ABORT_DSTACK_OVERRUN:
+        msg = "dstack overrun";
+        break;
+    case ZF_ABORT_DSTACK_UNDERRUN:
+        msg = "dstack underrun";
+        break;
+    case ZF_ABORT_RSTACK_OVERRUN:
+        msg = "stack overrun";
+        break;
+    case ZF_ABORT_RSTACK_UNDERRUN:
+        msg = "rstack underrun";
+        break;
+    case ZF_ABORT_NOT_A_WORD:
+        msg = "Not a word";
+        break;
+    case ZF_ABORT_COMPILE_ONLY_WORD:
+        msg = "compile-only word";
+        break;
+    case ZF_ABORT_INVALID_SIZE:
+        msg = "Invalid size";
+        break;
+    case ZF_ABORT_DIVISION_BY_ZERO:
+        msg = "Division by zero";
+        break;
+    default:
+        msg = "unknown error";
+    }
+    if (msg != NULL)
+    {
+        message(msg);
+        return -1;
+    }
+    return 0;
+}
+
+int zforth_init()
+{
+    zf_init(0);
+    zf_bootstrap();
+
+    int cr = zforth_eval((const char *)forth_core_zf);
+    if (cr != 0)
+    {
+        return -1;
+    }
+    return zforth_eval((const char *)forth_math_zf);
+}
+
 zf_input_state zf_host_sys(zf_syscall_id id, const char *last_word)
 {
+    char cell[32];
+    zf_cell val;
+
     switch ((int)id)
     {
         /* The core system callbacks */
 
     case ZF_SYSCALL_EMIT:
-        buffer_add((char)zf_pop());
-        message(bufOut);
         break;
 
     case ZF_SYSCALL_PRINT:
-        lcd_print(t20, ZF_CELL_FMT " ", zf_pop());
+        val = zf_pop();
+        snprintf(cell, sizeof(cell) - 1, ZF_CELL_FMT, val);
+        lcd_puts(t20, cell);
         lcd_refresh();
         break;
 
@@ -62,6 +124,7 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *last_word)
         /* Application specific callbacks */
 
     case ZF_SYSCALL_USER + 0:
+        // save("zforth.save");
         break;
 
     case ZF_SYSCALL_USER + 1:
@@ -71,7 +134,11 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *last_word)
         break;
 
     case ZF_SYSCALL_USER + 3:
-        // save("zforth.save");
+        zf_push(sin(zf_pop()));
+        break;
+
+    case ZF_SYSCALL_USER + 4:
+        zf_push(cos(zf_pop()));
         break;
 
     default:
@@ -89,7 +156,7 @@ void zf_host_trace(const char *fmt, va_list va)
 zf_cell zf_host_parse_num(const char *buf)
 {
     zf_cell v;
-    int r = sscanf(buf, "%f", &v);
+    int r = sscanf(buf, "%lf", &v);
     if (r == 0)
     {
         zf_abort(ZF_ABORT_NOT_A_WORD);
