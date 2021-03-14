@@ -56,7 +56,6 @@ endif
 
 # ---
 
-
 #######################################
 # binaries
 #######################################
@@ -127,7 +126,10 @@ vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
 
-$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
+%.h: %.fth
+	xxd -i $< $@
+
+$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)  
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cc Makefile | $(BUILD_DIR) 
