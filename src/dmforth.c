@@ -133,12 +133,16 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *last_word)
     case ZF_SYSCALL_USER + 2:
         break;
 
-    case ZF_SYSCALL_USER + 3:
+    case 140:
         zf_push(sin(zf_pop()));
         break;
 
-    case ZF_SYSCALL_USER + 4:
+    case 141:
         zf_push(cos(zf_pop()));
+        break;
+
+    case 142:
+        zf_push(tan(zf_pop()));
         break;
 
     default:

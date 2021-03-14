@@ -266,6 +266,10 @@ void program_main()
                 eval("cos");
                 break;
 
+            case KEY_TAN:
+                eval("tan");
+                break;
+
             case KEY_ENTER:
                 eval(NULL);
                 break;

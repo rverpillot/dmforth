@@ -83,7 +83,7 @@ static const char prim_names[] =
 
 static zf_cell rstack[ZF_RSTACK_SIZE];
 static zf_cell dstack[ZF_DSTACK_SIZE];
-static uint8_t dict[ZF_DICT_SIZE];
+static uint8_t *dict;
 
 /* State and stack and interpreter pointers */
 
@@ -111,7 +111,7 @@ static jmp_buf jmpbuf;
 static const char uservar_names[] =
 	_("h") _("latest") _("trace") _("compiling") _("_postpone");
 
-static zf_addr *uservar = (zf_addr *)dict;
+static zf_addr *uservar;
 
 /* Prototypes */
 
@@ -891,6 +891,8 @@ static void handle_char(char c)
 
 void zf_init(int enable_trace)
 {
+	dict = malloc(ZF_DICT_SIZE);
+	uservar = (zf_addr *)dict;
 	HERE = USERVAR_COUNT * sizeof(zf_addr);
 	TRACE = enable_trace;
 	LATEST = 0;

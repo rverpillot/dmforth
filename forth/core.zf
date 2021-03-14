@@ -88,4 +88,7 @@
 
 ( miscellaneous )
 
+: max  over over < if swap fi drop ;
+: min  over over > if swap fi drop ;
+
 
