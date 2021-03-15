@@ -401,12 +401,10 @@ static zf_addr dict_get_cell(zf_addr addr, zf_cell *v)
  * increase the pointer
  */
 
-static zf_addr dict_add_cell_typed(zf_addr addr, zf_cell v, zf_mem_size size)
+static void dict_add_cell_typed(zf_addr addr, zf_cell v, zf_mem_size size)
 {
-	zf_addr len = dict_put_cell_typed(addr, v, size);
+	HERE += dict_put_cell_typed(addr, v, size);
 	trace(" ");
-	HERE += len;
-	return len;
 }
 
 static void dict_add_cell(zf_cell v)

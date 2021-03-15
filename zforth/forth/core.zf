@@ -46,8 +46,10 @@
 
 ( memory management )
 
+: cells 8 ;
 : allot  h +!  ;
 : var : postpone [ ' lit , here dup 5 + , ' exit , here swap ! 5 allot ;
+: variable create 0 , ;
 
 
 ( 'begin' gets the current address, a jump or conditional jump back is generated
