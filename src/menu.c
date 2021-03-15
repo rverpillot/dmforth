@@ -76,7 +76,7 @@ void disp_about()
   int h2 = lcd_lineHeight(t20) / 2;
   lcd_setXY(t20, t24->x, t24->y);
   t20->y += h2;
-  lcd_print(t20, "fhcalc v" PROGRAM_VERSION " (C) Regis Verpillot");
+  lcd_print(t20, "dmforth v" PROGRAM_VERSION " (C) Regis Verpillot");
   t20->y += h2;
   t20->y += h2;
   lcd_puts(t20, "Intel Decimal Floating-Point Math Lib v2.0");

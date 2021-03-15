@@ -1,4 +1,4 @@
-
+#include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdarg.h>
@@ -236,6 +236,16 @@ zf_cell zf_pickr(zf_addr n)
 	return rstack[rsp - n - 1];
 }
 
+void zf_dstack_show()
+{
+	printf("<%d>", dsp);
+	for (int i = 0; i < (int)dsp; i++)
+	{
+		printf(" " ZF_CELL_FMT, dstack[i]);
+	}
+	printf("\n");
+}
+
 /*
  * All access to dictionary memory is done through these functions.
  */
@@ -390,15 +400,16 @@ static zf_addr dict_get_cell(zf_addr addr, zf_cell *v)
  * increase the pointer
  */
 
-static void dict_add_cell_typed(zf_cell v, zf_mem_size size)
+static zf_addr dict_add_cell_typed(zf_addr addr, zf_cell v, zf_mem_size size)
 {
-	HERE += dict_put_cell_typed(HERE, v, size);
+	addr += dict_put_cell_typed(addr, v, size);
 	trace(" ");
+	return addr;
 }
 
 static void dict_add_cell(zf_cell v)
 {
-	dict_add_cell_typed(v, ZF_MEM_SIZE_VAR);
+	HERE = dict_add_cell_typed(HERE, v, ZF_MEM_SIZE_VAR);
 }
 
 static void dict_add_op(zf_addr op)
@@ -728,7 +739,9 @@ static void do_prim(zf_prim op, const char *input)
 	case PRIM_COMMA:
 		d2 = zf_pop();
 		d1 = zf_pop();
-		dict_add_cell_typed(d1, (zf_mem_size)d2);
+		// addr = zf_pop();
+		HERE = dict_add_cell_typed(HERE, d1, (zf_mem_size)d2);
+		// zf_push(addr);
 		break;
 
 	case PRIM_COMMENT:

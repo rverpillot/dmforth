@@ -3,5 +3,4 @@
 *.a
 .dep
 build
-pforth/fth/pforth.dic
-
+*.hist

@@ -4,10 +4,12 @@
 : emit    0 sys ;
 : .       1 sys ;
 : tell    2 sys ;
-: save    128 sys ;
-: quit    129 sys ;
+: quit    128 sys ;
+: sin     129 sys ;
 : include 130 sys ;
-
+: save    131 sys ;
+: .s      132 sys ;
+: cells   133 sys * ;
 
 ( dictionary access. These are shortcuts through the primitive operations are !!, @@ and ,, )
 
@@ -85,11 +87,8 @@
 : ." compiling @ if postpone s" ' tell , else begin key dup 34 = if drop exit else emit fi again
      fi ; immediate
 
+
 ." Welcome to zForth, " here . ." bytes used" cr ;
 
-( miscellaneous )
-
-: max  over over < if swap fi drop ;
-: min  over over > if swap fi drop ;
 
 
