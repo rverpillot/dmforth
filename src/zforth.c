@@ -36,6 +36,7 @@
 typedef enum
 {
 	PRIM_EXIT,
+	PRIM_CREATE,
 	PRIM_LIT,
 	PRIM_LTZ,
 	PRIM_COL,
@@ -72,7 +73,7 @@ typedef enum
 } zf_prim;
 
 static const char prim_names[] =
-	_("exit") _("lit") _("<0") _(":") _("_;") _("+")
+	_("exit") _("create") _("lit") _("<0") _(":") _("_;") _("+")
 		_("-") _("*") _("/") _("%") _("drop") _("dup")
 			_("pickr") _("_immediate") _("@@") _("!!") _("swap") _("rot")
 				_("jmp") _("jmp0") _("'") _("_(") _(">r") _("r>")
@@ -402,14 +403,15 @@ static zf_addr dict_get_cell(zf_addr addr, zf_cell *v)
 
 static zf_addr dict_add_cell_typed(zf_addr addr, zf_cell v, zf_mem_size size)
 {
-	addr += dict_put_cell_typed(addr, v, size);
+	zf_addr len = dict_put_cell_typed(addr, v, size);
 	trace(" ");
-	return addr;
+	HERE += len;
+	return len;
 }
 
 static void dict_add_cell(zf_cell v)
 {
-	HERE = dict_add_cell_typed(HERE, v, ZF_MEM_SIZE_VAR);
+	dict_add_cell_typed(HERE, v, ZF_MEM_SIZE_VAR);
 }
 
 static void dict_add_op(zf_addr op)
@@ -576,6 +578,19 @@ static void do_prim(zf_prim op, const char *input)
 	switch (op)
 	{
 
+	case PRIM_CREATE:
+		if (input == NULL)
+		{
+			input_state = ZF_INPUT_PASS_WORD;
+		}
+		else
+		{
+			create(input, 0);
+			dict_add_lit(HERE + 4);
+			dict_add_op(PRIM_EXIT);
+		}
+		break;
+
 	case PRIM_COL:
 		if (input == NULL)
 		{
@@ -739,9 +754,7 @@ static void do_prim(zf_prim op, const char *input)
 	case PRIM_COMMA:
 		d2 = zf_pop();
 		d1 = zf_pop();
-		// addr = zf_pop();
-		HERE = dict_add_cell_typed(HERE, d1, (zf_mem_size)d2);
-		// zf_push(addr);
+		dict_add_cell_typed(HERE, d1, (zf_mem_size)d2);
 		break;
 
 	case PRIM_COMMENT:
@@ -798,7 +811,7 @@ static void do_prim(zf_prim op, const char *input)
 
 static void handle_word(const char *buf)
 {
-	zf_addr w, c = 0;
+	zf_addr w, code = 0;
 	int found;
 
 	/* If a word was requested by an earlier operation, resume with the new
@@ -813,7 +826,7 @@ static void handle_word(const char *buf)
 
 	/* Look up the word in the dictionary */
 
-	found = find_word(buf, &w, &c);
+	found = find_word(buf, &w, &code);
 
 	if (found)
 	{
@@ -829,18 +842,18 @@ static void handle_word(const char *buf)
 		{
 			if (flags & ZF_FLAG_PRIM)
 			{
-				dict_get_cell(c, &d);
+				dict_get_cell(code, &d);
 				dict_add_op(d);
 			}
 			else
 			{
-				dict_add_op(c);
+				dict_add_op(code);
 			}
 			POSTPONE = 0;
 		}
 		else
 		{
-			execute(c);
+			execute(code);
 		}
 	}
 	else
