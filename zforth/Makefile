@@ -5,13 +5,13 @@ SRC	:= main.c ../src/zforth.c
 OBJS    := $(subst .c,.o, $(SRC))
 DEPS    := $(subst .c,.d, $(SRC))
 
-CC	:= $(CROSS)gcc
+CC	:= $(CROSS)gcc-10
 
 VPATH   := ../zforth
 CFLAGS	+= -I. -I../zforth -I../src
-CFLAGS  += -Os -g -pedantic -MMD
-CFLAGS  += -fsanitize=address -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-result
-LDFLAGS	+= -fsanitize=address -g 
+CFLAGS  += -Os -g -MMD
+CFLAGS  += -Wall -Werror -Wno-unused-parameter -Wno-unused-result
+LDFLAGS	+= -g 
 
 LIBS	+= -lm
 

@@ -573,233 +573,268 @@ static void do_prim(zf_prim op, const char *input)
 
 	trace("(%s) ", op_name(op));
 
-	switch (op)
+	static void *labels[] = {
+		&&LABEL_EXIT,
+		&&LABEL_CREATE,
+		&&LABEL_LIT,
+		&&LABEL_LTZ,
+		&&LABEL_COL,
+		&&LABEL_SEMICOL,
+		&&LABEL_ADD,
+		&&LABEL_SUB,
+		&&LABEL_MUL,
+		&&LABEL_DIV,
+		&&LABEL_MOD,
+		&&LABEL_DROP,
+		&&LABEL_DUP,
+		&&LABEL_PICKR,
+		&&LABEL_IMMEDIATE,
+		&&LABEL_PEEK,
+		&&LABEL_POKE,
+		&&LABEL_SWAP,
+		&&LABEL_ROT,
+		&&LABEL_JMP,
+		&&LABEL_JMP0,
+		&&LABEL_TICK,
+		&&LABEL_COMMENT,
+		&&LABEL_PUSHR,
+		&&LABEL_POPR,
+		&&LABEL_EQUAL,
+		&&LABEL_SYS,
+		&&LABEL_PICK,
+		&&LABEL_COMMA,
+		&&LABEL_KEY,
+		&&LABEL_LITS,
+		&&LABEL_LEN,
+		&&LABEL_AND};
+
+	if (op >= PRIM_COUNT)
 	{
+		zf_abort(ZF_ABORT_INTERNAL_ERROR);
+		return;
+	}
 
-	case PRIM_CREATE:
-		if (input == NULL)
-		{
-			input_state = ZF_INPUT_PASS_WORD;
-		}
-		else
-		{
-			create(input, 0);
-			dict_add_lit(HERE + 4);
-			dict_add_op(PRIM_EXIT);
-		}
-		break;
+	goto *labels[op];
 
-	case PRIM_COL:
-		if (input == NULL)
-		{
-			input_state = ZF_INPUT_PASS_WORD;
-		}
-		else
-		{
-			create(input, 0);
-			COMPILING = 1;
-		}
-		break;
-
-	case PRIM_LTZ:
-		zf_push(zf_pop() < 0);
-		break;
-
-	case PRIM_SEMICOL:
+LABEL_CREATE:
+	if (input == NULL)
+	{
+		input_state = ZF_INPUT_PASS_WORD;
+	}
+	else
+	{
+		create(input, 0);
+		dict_add_lit(HERE + 4);
 		dict_add_op(PRIM_EXIT);
-		trace("\n===");
-		COMPILING = 0;
-		break;
+	}
+	return;
 
-	case PRIM_LIT:
-		ip += dict_get_cell(ip, &d1);
-		zf_push(d1);
-		break;
+LABEL_COL:
+	if (input == NULL)
+	{
+		input_state = ZF_INPUT_PASS_WORD;
+	}
+	else
+	{
+		create(input, 0);
+		COMPILING = 1;
+	}
+	return;
 
-	case PRIM_EXIT:
-		ip = zf_popr();
-		break;
+LABEL_LTZ:
+	zf_push(zf_pop() < 0);
+	return;
 
-	case PRIM_LEN:
-		len = zf_pop();
-		addr = zf_pop();
-		zf_push(peek(addr, &d1, len));
-		break;
+LABEL_SEMICOL:
+	dict_add_op(PRIM_EXIT);
+	trace("\n===");
+	COMPILING = 0;
+	return;
 
-	case PRIM_PEEK:
-		len = zf_pop();
-		addr = zf_pop();
-		peek(addr, &d1, len);
-		zf_push(d1);
-		break;
+LABEL_LIT:
+	ip += dict_get_cell(ip, &d1);
+	zf_push(d1);
+	return;
 
-	case PRIM_POKE:
-		d2 = zf_pop();
-		addr = zf_pop();
-		d1 = zf_pop();
-		if (addr < USERVAR_COUNT)
-		{
-			uservar[addr] = d1;
-			break;
-		}
-		dict_put_cell_typed(addr, d1, (zf_mem_size)d2);
-		break;
+LABEL_EXIT:
+	ip = zf_popr();
+	return;
 
-	case PRIM_SWAP:
-		d1 = zf_pop();
-		d2 = zf_pop();
-		zf_push(d1);
-		zf_push(d2);
-		break;
+LABEL_LEN:
+	len = zf_pop();
+	addr = zf_pop();
+	zf_push(peek(addr, &d1, len));
+	return;
 
-	case PRIM_ROT:
-		d1 = zf_pop();
-		d2 = zf_pop();
-		d3 = zf_pop();
-		zf_push(d2);
-		zf_push(d1);
-		zf_push(d3);
-		break;
+LABEL_PEEK:
+	len = zf_pop();
+	addr = zf_pop();
+	peek(addr, &d1, len);
+	zf_push(d1);
+	return;
 
-	case PRIM_DROP:
-		zf_pop();
-		break;
+LABEL_POKE:
+	d2 = zf_pop();
+	addr = zf_pop();
+	d1 = zf_pop();
+	if (addr < USERVAR_COUNT)
+	{
+		uservar[addr] = d1;
+		return;
+	}
+	dict_put_cell_typed(addr, d1, (zf_mem_size)d2);
+	return;
 
-	case PRIM_DUP:
-		d1 = zf_pop();
-		zf_push(d1);
-		zf_push(d1);
-		break;
+LABEL_SWAP:
+	d1 = zf_pop();
+	d2 = zf_pop();
+	zf_push(d1);
+	zf_push(d2);
+	return;
 
-	case PRIM_ADD:
-		d1 = zf_pop();
-		d2 = zf_pop();
-		zf_push(d1 + d2);
-		break;
+LABEL_ROT:
+	d1 = zf_pop();
+	d2 = zf_pop();
+	d3 = zf_pop();
+	zf_push(d2);
+	zf_push(d1);
+	zf_push(d3);
+	return;
 
-	case PRIM_SYS:
-		d1 = zf_pop();
-		input_state = zf_host_sys((zf_syscall_id)d1, input);
-		if (input_state != ZF_INPUT_INTERPRET)
-		{
-			zf_push(d1); /* re-push id to resume */
-		}
-		break;
+LABEL_DROP:
+	zf_pop();
+	return;
 
-	case PRIM_PICK:
-		addr = zf_pop();
-		zf_push(zf_pick(addr));
-		break;
+LABEL_DUP:
+	d1 = zf_pop();
+	zf_push(d1);
+	zf_push(d1);
+	return;
 
-	case PRIM_PICKR:
-		addr = zf_pop();
-		zf_push(zf_pickr(addr));
-		break;
+LABEL_ADD:
+	d1 = zf_pop();
+	d2 = zf_pop();
+	zf_push(d1 + d2);
+	return;
 
-	case PRIM_SUB:
-		d1 = zf_pop();
-		d2 = zf_pop();
-		zf_push(d2 - d1);
-		break;
+LABEL_SYS:
+	d1 = zf_pop();
+	input_state = zf_host_sys((zf_syscall_id)d1, input);
+	if (input_state != ZF_INPUT_INTERPRET)
+	{
+		zf_push(d1); /* re-push id to resume */
+	}
+	return;
 
-	case PRIM_MUL:
-		zf_push(zf_pop() * zf_pop());
-		break;
+LABEL_PICK:
+	addr = zf_pop();
+	zf_push(zf_pick(addr));
+	return;
 
-	case PRIM_DIV:
-		if ((d2 = zf_pop()) == 0)
-		{
-			zf_abort(ZF_ABORT_DIVISION_BY_ZERO);
-		}
-		d1 = zf_pop();
-		zf_push(d1 / d2);
-		break;
+LABEL_PICKR:
+	addr = zf_pop();
+	zf_push(zf_pickr(addr));
+	return;
 
-	case PRIM_MOD:
-		if ((int)(d2 = zf_pop()) == 0)
-		{
-			zf_abort(ZF_ABORT_DIVISION_BY_ZERO);
-		}
-		d1 = zf_pop();
-		zf_push((int)d1 % (int)d2);
-		break;
+LABEL_SUB:
+	d1 = zf_pop();
+	d2 = zf_pop();
+	zf_push(d2 - d1);
+	return;
 
-	case PRIM_IMMEDIATE:
-		make_immediate();
-		break;
+LABEL_MUL:
+	zf_push(zf_pop() * zf_pop());
+	return;
 
-	case PRIM_JMP:
-		ip += dict_get_cell(ip, &d1);
+LABEL_DIV:
+	if ((d2 = zf_pop()) == 0)
+	{
+		zf_abort(ZF_ABORT_DIVISION_BY_ZERO);
+	}
+	d1 = zf_pop();
+	zf_push(d1 / d2);
+	return;
+
+LABEL_MOD:
+	if ((int)(d2 = zf_pop()) == 0)
+	{
+		zf_abort(ZF_ABORT_DIVISION_BY_ZERO);
+	}
+	d1 = zf_pop();
+	zf_push((int)d1 % (int)d2);
+	return;
+
+LABEL_IMMEDIATE:
+	make_immediate();
+	return;
+
+LABEL_JMP:
+	ip += dict_get_cell(ip, &d1);
+	trace("ip " ZF_ADDR_FMT "=>" ZF_ADDR_FMT, ip, (zf_addr)d1);
+	ip = d1;
+	return;
+
+LABEL_JMP0:
+	ip += dict_get_cell(ip, &d1);
+	if (zf_pop() == 0)
+	{
 		trace("ip " ZF_ADDR_FMT "=>" ZF_ADDR_FMT, ip, (zf_addr)d1);
 		ip = d1;
-		break;
-
-	case PRIM_JMP0:
-		ip += dict_get_cell(ip, &d1);
-		if (zf_pop() == 0)
-		{
-			trace("ip " ZF_ADDR_FMT "=>" ZF_ADDR_FMT, ip, (zf_addr)d1);
-			ip = d1;
-		}
-		break;
-
-	case PRIM_TICK:
-		ip += dict_get_cell(ip, &d1);
-		trace("%s/", op_name(d1));
-		zf_push(d1);
-		break;
-
-	case PRIM_COMMA:
-		d2 = zf_pop();
-		d1 = zf_pop();
-		dict_add_cell_typed(HERE, d1, (zf_mem_size)d2);
-		break;
-
-	case PRIM_COMMENT:
-		if (!input || input[0] != ')')
-		{
-			input_state = ZF_INPUT_PASS_CHAR;
-		}
-		break;
-
-	case PRIM_PUSHR:
-		zf_pushr(zf_pop());
-		break;
-
-	case PRIM_POPR:
-		zf_push(zf_popr());
-		break;
-
-	case PRIM_EQUAL:
-		zf_push(zf_pop() == zf_pop());
-		break;
-
-	case PRIM_KEY:
-		if (input == NULL)
-		{
-			input_state = ZF_INPUT_PASS_CHAR;
-		}
-		else
-		{
-			zf_push(input[0]);
-		}
-		break;
-
-	case PRIM_LITS:
-		ip += dict_get_cell(ip, &d1);
-		zf_push(ip);
-		zf_push(d1);
-		ip += d1;
-		break;
-
-	case PRIM_AND:
-		zf_push((int)zf_pop() & (int)zf_pop());
-		break;
-
-	default:
-		zf_abort(ZF_ABORT_INTERNAL_ERROR);
-		break;
 	}
+	return;
+
+LABEL_TICK:
+	ip += dict_get_cell(ip, &d1);
+	trace("%s/", op_name(d1));
+	zf_push(d1);
+	return;
+
+LABEL_COMMA:
+	d2 = zf_pop();
+	d1 = zf_pop();
+	dict_add_cell_typed(HERE, d1, (zf_mem_size)d2);
+	return;
+
+LABEL_COMMENT:
+	if (!input || input[0] != ')')
+	{
+		input_state = ZF_INPUT_PASS_CHAR;
+	}
+	return;
+
+LABEL_PUSHR:
+	zf_pushr(zf_pop());
+	return;
+
+LABEL_POPR:
+	zf_push(zf_popr());
+	return;
+
+LABEL_EQUAL:
+	zf_push(zf_pop() == zf_pop());
+	return;
+
+LABEL_KEY:
+	if (input == NULL)
+	{
+		input_state = ZF_INPUT_PASS_CHAR;
+	}
+	else
+	{
+		zf_push(input[0]);
+	}
+	return;
+
+LABEL_LITS:
+	ip += dict_get_cell(ip, &d1);
+	zf_push(ip);
+	zf_push(d1);
+	ip += d1;
+	return;
+
+LABEL_AND:
+	zf_push((int)zf_pop() & (int)zf_pop());
+	return;
 }
 
 /*
