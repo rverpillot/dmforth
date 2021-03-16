@@ -79,7 +79,7 @@ static const char prim_names[] =
 			_("pickr") _("_immediate") _("@@") _("!!") _("swap") _("rot")
 				_("jmp") _("jmp0") _("'") _("_(") _(">r") _("r>")
 					_("=") _("sys") _("pick") _(",,") _("key") _("lits")
-						_("##") _("&") _("t\"");
+						_("##") _("&") _("_t\"");
 
 /* Stacks and dictionary memory */
 
@@ -860,9 +860,8 @@ LABEL_STR:
 		if (COMPILING)
 		{
 			dict_add_op(PRIM_LITS);
-			dict_add_cell(HERE + 2);
 			dict_add_cell(len);
-			dict_add_str(dict[addr]);
+			dict_add_str((const char *)&dict[addr]);
 			TMP = addr;
 		}
 		break;
@@ -1009,7 +1008,7 @@ static void add_prim(const char *name, zf_prim op)
 {
 	int imm = 0;
 
-	if (name[0] == '_')
+	if (name[0] == '_') // Immediate mode
 	{
 		name++;
 		imm = 1;
