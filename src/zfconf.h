@@ -45,6 +45,7 @@ typedef unsigned int zf_addr;
  * number of elements of type zf_cell */
 
 #define ZF_DICT_SIZE 1024 * 64
+#define ZF_TMP_ADDR 32 * 1024 // Addr to store temporary object
 #define ZF_DSTACK_SIZE 128
 #define ZF_RSTACK_SIZE 128
 

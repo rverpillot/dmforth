@@ -68,6 +68,7 @@ typedef enum
 	PRIM_LITS,
 	PRIM_LEN,
 	PRIM_AND,
+	PRIM_STR,
 
 	PRIM_COUNT
 } zf_prim;
@@ -78,7 +79,7 @@ static const char prim_names[] =
 			_("pickr") _("_immediate") _("@@") _("!!") _("swap") _("rot")
 				_("jmp") _("jmp0") _("'") _("_(") _(">r") _("r>")
 					_("=") _("sys") _("pick") _(",,") _("key") _("lits")
-						_("##") _("&");
+						_("##") _("&") _("t\"");
 
 /* Stacks and dictionary memory */
 
@@ -107,10 +108,11 @@ static jmp_buf jmpbuf;
 #define TRACE uservar[2]	 /* trace enable flag */
 #define COMPILING uservar[3] /* compiling flag */
 #define POSTPONE uservar[4]	 /* flag to indicate next imm word should be compiled */
-#define USERVAR_COUNT 5
+#define TMP uservar[5]
+#define USERVAR_COUNT 6
 
 static const char uservar_names[] =
-	_("h") _("latest") _("trace") _("compiling") _("_postpone");
+	_("h") _("latest") _("trace") _("compiling") _("_postpone") _("tmp");
 
 static zf_addr *uservar;
 
@@ -606,7 +608,8 @@ static void do_prim(zf_prim op, const char *input)
 		&&LABEL_KEY,
 		&&LABEL_LITS,
 		&&LABEL_LEN,
-		&&LABEL_AND};
+		&&LABEL_AND,
+		&&LABEL_STR};
 
 	if (op >= PRIM_COUNT)
 	{
@@ -835,6 +838,40 @@ LABEL_LITS:
 LABEL_AND:
 	zf_push((int)zf_pop() & (int)zf_pop());
 	return;
+
+LABEL_STR:
+	if (input == NULL)
+	{
+		zf_push(TMP);
+		input_state = ZF_INPUT_PASS_CHAR;
+		return;
+	}
+	switch (input[0])
+	{
+	case '\'':
+		input_state = ZF_INPUT_PASS_CHAR;
+		break;
+
+	case '"':
+		addr = zf_pick(0);
+		len = TMP - addr;
+		zf_push(len);
+		dict[TMP++] = 0;
+		if (COMPILING)
+		{
+			dict_add_op(PRIM_LITS);
+			dict_add_cell(HERE + 2);
+			dict_add_cell(len);
+			dict_add_str(dict[addr]);
+			TMP = addr;
+		}
+		break;
+
+	default:
+		input_state = ZF_INPUT_PASS_CHAR;
+		dict[TMP++] = input[0];
+	}
+	return;
 }
 
 /*
@@ -955,6 +992,7 @@ void zf_init(int enable_trace)
 	HERE = USERVAR_COUNT * sizeof(zf_addr);
 	TRACE = enable_trace;
 	LATEST = 0;
+	TMP = ZF_TMP_ADDR;
 	dsp = 0;
 	rsp = 0;
 	COMPILING = 0;

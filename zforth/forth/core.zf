@@ -42,6 +42,7 @@
 : cr   10 emit ;
 : ..   dup . ;
 : here h @ ;
+: temp tmp @ ;
 
 
 ( memory management )
@@ -88,6 +89,10 @@
 
 : ." compiling @ if postpone s" ' tell , else begin key dup 34 = if drop exit else emit fi again
      fi ; immediate
+
+( Print string )
+
+: type over + 1 - swap do i @ emit loop cr ; 
 
 
 ." Welcome to zForth, " here . ." bytes used" cr ;
