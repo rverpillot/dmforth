@@ -79,7 +79,7 @@ static const char prim_names[] =
 			_("pickr") _("_immediate") _("@@") _("!!") _("swap") _("rot")
 				_("jmp") _("jmp0") _("'") _("_(") _(">r") _("r>")
 					_("=") _("sys") _("pick") _(",,") _("key") _("lits")
-						_("##") _("&") _("_t\"");
+						_("##") _("&") _("_s\"");
 
 /* Stacks and dictionary memory */
 
@@ -204,6 +204,13 @@ zf_cell zf_pop(void)
 	v = dstack[--dsp];
 	trace("«" ZF_CELL_FMT " ", v);
 	return v;
+}
+
+const char *zf_pop_string()
+{
+	zf_pop();
+	zf_addr addr = zf_pop();
+	return (const char *)&dict[addr];
 }
 
 zf_cell zf_pick(zf_addr n)
@@ -846,13 +853,9 @@ LABEL_STR:
 		input_state = ZF_INPUT_PASS_CHAR;
 		return;
 	}
-	switch (input[0])
-	{
-	case '\'':
-		input_state = ZF_INPUT_PASS_CHAR;
-		break;
 
-	case '"':
+	if (input[0] == '"' && dict[TMP - 1] != '\\')
+	{
 		addr = zf_pick(0);
 		len = TMP - addr;
 		zf_push(len);
@@ -862,15 +865,14 @@ LABEL_STR:
 			dict_add_op(PRIM_LITS);
 			dict_add_cell(len);
 			dict_add_str((const char *)&dict[addr]);
+			dict[HERE++] = 0;
 			TMP = addr;
 		}
-		break;
-
-	default:
-		input_state = ZF_INPUT_PASS_CHAR;
-		dict[TMP++] = input[0];
+		return;
 	}
-	return;
+
+	input_state = ZF_INPUT_PASS_CHAR;
+	dict[TMP++] = input[0];
 }
 
 /*

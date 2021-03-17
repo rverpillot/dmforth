@@ -173,7 +173,7 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
 		break;
 
 	case ZF_SYSCALL_USER + 1:
-		zf_push(sin(zf_pop()));
+		printf("%s", (const char *)zf_pop_string());
 		break;
 
 	case ZF_SYSCALL_USER + 2:
@@ -195,6 +195,42 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
 	case ZF_SYSCALL_USER + 5:
 		zf_push(sizeof(zf_cell));
 		break;
+
+	case ZF_SYSCALL_USER + 6:
+	{
+		// size_t len = 0;
+		// const char *fmt = zf_pop_string(&len);
+		// int count = 0;
+		// zf_cell args[10];
+		// for (int i = 0; i < len && i < 10; i++)
+		// {
+		// 	if (fmt[i] == '%')
+		// 		count++;
+		// 	if (i > 0 && fmt[i - 1] == '%')
+		// 	{
+		// 		count--;
+		// 		continue;
+		// 	}
+		// 	for (; i < len && i < 10; i++)
+		// 	{
+		// 		if (strchr("cdieEfgGosuxX", fmt[i]))
+		// 		{
+		// 			size_t len;
+		// 			switch (fmt[i])
+		// 			{
+		// 			case 's':
+		// 				args[count - 1] = (zf_cell)zf_pop_string(&len);
+		// 				break;
+
+		// 			default:
+		// 				args[count - 1] = zf_pop();
+		// 				break;
+		// 			}
+		// 			break;
+		// 		}
+		// 	}
+		// }
+	}
 
 	default:
 		printf("unhandled syscall %d\n", id);
