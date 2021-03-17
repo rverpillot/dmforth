@@ -857,7 +857,7 @@ LABEL_STR:
 	if (input[0] == '"' && dict[TMP - 1] != '\\')
 	{
 		addr = zf_pick(0);
-		len = TMP - addr;
+		len = TMP - addr +1;
 		zf_push(len);
 		dict[TMP++] = 0;
 		if (COMPILING)
@@ -867,6 +867,8 @@ LABEL_STR:
 			dict_add_str((const char *)&dict[addr]);
 			dict[HERE++] = 0;
 			TMP = addr;
+			zf_pop();
+			zf_pop();
 		}
 		return;
 	}
