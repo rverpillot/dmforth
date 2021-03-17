@@ -57,7 +57,7 @@ typedef enum
 	PRIM_JMP,
 	PRIM_JMP0,
 	PRIM_TICK,
-	PRIM_TICK2,
+	PRIM_TICKC,
 	PRIM_COMMENT,
 	PRIM_COMMENT2,
 	PRIM_PUSHR,
@@ -608,7 +608,7 @@ static void do_prim(zf_prim op, const char *input)
 		&&LABEL_JMP,
 		&&LABEL_JMP0,
 		&&LABEL_TICK,
-		&&LABEL_TICK2,
+		&&LABEL_TICKC,
 		&&LABEL_COMMENT,
 		&&LABEL_COMMENT2,
 		&&LABEL_PUSHR,
@@ -810,7 +810,7 @@ LABEL_TICK:
 	zf_push(xt);
 	return;
 
-LABEL_TICK2:
+LABEL_TICKC:
 	ip += dict_get_cell(ip, &d1);
 	trace("%s/", op_name(d1));
 	zf_push(d1);
