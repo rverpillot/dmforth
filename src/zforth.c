@@ -58,6 +58,7 @@ typedef enum
 	PRIM_JMP0,
 	PRIM_TICK,
 	PRIM_COMMENT,
+	PRIM_COMMENT2,
 	PRIM_PUSHR,
 	PRIM_POPR,
 	PRIM_EQUAL,
@@ -77,7 +78,7 @@ static const char prim_names[] =
 	_("exit") _("create") _("lit") _("<0") _(":") _("_;") _("+")
 		_("-") _("*") _("/") _("%") _("drop") _("dup")
 			_("pickr") _("_immediate") _("@@") _("!!") _("swap") _("rot")
-				_("jmp") _("jmp0") _("'") _("_(") _(">r") _("r>")
+				_("jmp") _("jmp0") _("'") _("_(") _("_\\") _(">r") _("r>")
 					_("=") _("sys") _("pick") _(",,") _("key") _("lits")
 						_("##") _("&") _("_s\"");
 
@@ -606,6 +607,7 @@ static void do_prim(zf_prim op, const char *input)
 		&&LABEL_JMP0,
 		&&LABEL_TICK,
 		&&LABEL_COMMENT,
+		&&LABEL_COMMENT2,
 		&&LABEL_PUSHR,
 		&&LABEL_POPR,
 		&&LABEL_EQUAL,
@@ -812,6 +814,13 @@ LABEL_COMMENT:
 	}
 	return;
 
+LABEL_COMMENT2:
+	if (!input || input[0] != '\n')
+	{
+		input_state = ZF_INPUT_PASS_CHAR;
+	}
+	return;
+
 LABEL_PUSHR:
 	zf_pushr(zf_pop());
 	return;
@@ -857,7 +866,7 @@ LABEL_STR:
 	if (input[0] == '"' && dict[TMP - 1] != '\\')
 	{
 		addr = zf_pick(0);
-		len = TMP - addr +1;
+		len = TMP - addr + 1;
 		zf_push(len);
 		dict[TMP++] = 0;
 		if (COMPILING)
