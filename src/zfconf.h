@@ -33,7 +33,7 @@
  * floating point numbers */
 
 typedef double zf_cell;
-#define ZF_CELL_FMT "%.3f"
+#define ZF_CELL_FMT "%.14g"
 
 /* The type to use for pointers and adresses. 'unsigned int' is usually a good
  * choice for best performance and smallest code size */
@@ -45,8 +45,10 @@ typedef unsigned int zf_addr;
  * number of elements of type zf_cell */
 
 #define ZF_DICT_SIZE 1024 * 64
-#define ZF_TMP_ADDR 32 * 1024 // Addr to store temporary object
 #define ZF_DSTACK_SIZE 128
 #define ZF_RSTACK_SIZE 128
+
+// Addr to store temporary object
+#define ZF_TMP_ADDR 32 * 1024
 
 #endif
