@@ -49,7 +49,7 @@
 
 : cells 8 ;
 : allot  h +!  ;
-: var : postpone [ ' lit , here dup 5 + , ' exit , here swap ! 5 allot ;
+: var : postpone [ ['] lit , here dup 5 + , ['] exit , here swap ! 5 allot ;
 : variable create 0 , ;
 
 
@@ -57,26 +57,26 @@
   by 'again', 'until' or 'times' )
 
 : begin   here ; immediate
-: again   ' jmp , , ; immediate
-: until   ' jmp0 , , ; immediate
-: times ' 1 - , ' dup , ' =0 , postpone until ; immediate
+: again   ['] jmp , , ; immediate
+: until   ['] jmp0 , , ; immediate
+: times ['] 1 - , ['] dup , ['] =0 , postpone until ; immediate
 
 
 ( 'if' prepares conditional jump, address will be filled in by 'else' or 'fi' )
 
-: if      ' jmp0 , here 999 , ; immediate
-: unless  ' not , postpone if ; immediate
-: else    ' jmp , here 999 , swap here swap ! ; immediate
+: if      ['] jmp0 , here 999 , ; immediate
+: unless  ['] not , postpone if ; immediate
+: else    ['] jmp , here 999 , swap here swap ! ; immediate
 : fi      here swap ! ; immediate
 
 
 ( forth style 'do' and 'loop', including loop iterators 'i' and 'j' )
 
-: i ' lit , 0 , ' pickr , ; immediate
-: j ' lit , 2 , ' pickr , ; immediate
-: do ' swap , ' >r , ' >r , here ; immediate
-: loop+ ' r> , ' + , ' dup , ' >r , ' lit , 1 , ' pickr , ' > , ' jmp0 , , ' r> , ' drop , ' r> , ' drop , ; immediate
-: loop ' lit , 1 , postpone loop+ ;  immediate
+: i ['] lit , 0 , ['] pickr , ; immediate
+: j ['] lit , 2 , ['] pickr , ; immediate
+: do ['] swap , ['] >r , ['] >r , here ; immediate
+: loop+ ['] r> , ['] + , ['] dup , ['] >r , ['] lit , 1 , ['] pickr , ['] > , ['] jmp0 , , ['] r> , ['] drop , ['] r> , ['] drop , ; immediate
+: loop ['] lit , 1 , postpone loop+ ;  immediate
 
 
 ( String )

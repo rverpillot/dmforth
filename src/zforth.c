@@ -57,6 +57,7 @@ typedef enum
 	PRIM_JMP,
 	PRIM_JMP0,
 	PRIM_TICK,
+	PRIM_TICK2,
 	PRIM_COMMENT,
 	PRIM_COMMENT2,
 	PRIM_PUSHR,
@@ -70,6 +71,7 @@ typedef enum
 	PRIM_LEN,
 	PRIM_AND,
 	PRIM_STR,
+	PRIM_EXECUTE,
 
 	PRIM_COUNT
 } zf_prim;
@@ -78,9 +80,9 @@ static const char prim_names[] =
 	_("exit") _("create") _("lit") _("<0") _(":") _("_;") _("+")
 		_("-") _("*") _("/") _("%") _("drop") _("dup")
 			_("pickr") _("_immediate") _("@@") _("!!") _("swap") _("rot")
-				_("jmp") _("jmp0") _("'") _("_(") _("_\\") _(">r") _("r>")
+				_("jmp") _("jmp0") _("'") _("[']") _("_(") _("_\\") _(">r") _("r>")
 					_("=") _("sys") _("pick") _(",,") _("key") _("lits")
-						_("##") _("&") _("_s\"");
+						_("##") _("&") _("_s\"") _("execute");
 
 /* Stacks and dictionary memory */
 
@@ -579,7 +581,7 @@ static zf_addr peek(zf_addr addr, zf_cell *val, int len)
 static void do_prim(zf_prim op, const char *input)
 {
 	zf_cell d1, d2, d3;
-	zf_addr addr, len;
+	zf_addr addr, len, xt;
 
 	trace("(%s) ", op_name(op));
 
@@ -606,6 +608,7 @@ static void do_prim(zf_prim op, const char *input)
 		&&LABEL_JMP,
 		&&LABEL_JMP0,
 		&&LABEL_TICK,
+		&&LABEL_TICK2,
 		&&LABEL_COMMENT,
 		&&LABEL_COMMENT2,
 		&&LABEL_PUSHR,
@@ -618,7 +621,8 @@ static void do_prim(zf_prim op, const char *input)
 		&&LABEL_LITS,
 		&&LABEL_LEN,
 		&&LABEL_AND,
-		&&LABEL_STR};
+		&&LABEL_STR,
+		&&LABEL_EXECUTE};
 
 	if (op >= PRIM_COUNT)
 	{
@@ -796,6 +800,17 @@ LABEL_JMP0:
 	return;
 
 LABEL_TICK:
+	if (!input)
+	{
+		input_state = ZF_INPUT_PASS_WORD;
+		return;
+	}
+	if (find_word(input, &addr, &xt) == 0)
+		zf_abort(ZF_ABORT_NOT_A_WORD);
+	zf_push(xt);
+	return;
+
+LABEL_TICK2:
 	ip += dict_get_cell(ip, &d1);
 	trace("%s/", op_name(d1));
 	zf_push(d1);
@@ -858,32 +873,41 @@ LABEL_AND:
 LABEL_STR:
 	if (input == NULL)
 	{
-		zf_push(TMP);
+		if (COMPILING)
+		{
+			dict_add_op(PRIM_LITS);
+			dict_add_cell(0);
+		}
+		zf_push(HERE);
 		input_state = ZF_INPUT_PASS_CHAR;
 		return;
 	}
 
 	if (input[0] == '"' && dict[TMP - 1] != '\\')
 	{
+		dict[HERE++] = 0;
 		addr = zf_pick(0);
-		len = TMP - addr + 1;
-		zf_push(len);
-		dict[TMP++] = 0;
+		len = HERE - addr;
 		if (COMPILING)
 		{
-			dict_add_op(PRIM_LITS);
-			dict_add_cell(len);
-			dict_add_str((const char *)&dict[addr]);
-			dict[HERE++] = 0;
-			TMP = addr;
 			zf_pop();
-			zf_pop();
+			dict_put_cell_typed(HERE - len - 1, len, ZF_MEM_SIZE_VAR);
+		}
+		else
+		{
+			zf_push(len);
 		}
 		return;
 	}
 
 	input_state = ZF_INPUT_PASS_CHAR;
-	dict[TMP++] = input[0];
+	dict[HERE++] = input[0];
+	return;
+
+LABEL_EXECUTE:
+	addr = zf_pop();
+	execute(addr);
+	return;
 }
 
 /*
