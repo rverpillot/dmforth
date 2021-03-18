@@ -77,12 +77,9 @@ typedef enum
 } zf_prim;
 
 static const char prim_names[] =
-	_("exit") _("create") _("lit") _("<0") _(":") _("_;") _("+")
-		_("-") _("*") _("/") _("%") _("drop") _("dup")
-			_("pickr") _("_immediate") _("@@") _("!!") _("swap") _("rot")
-				_("jmp") _("jmp0") _("'") _("[']") _("_(") _("_\\") _(">r") _("r>")
-					_("=") _("sys") _("pick") _(",,") _("key") _("lits")
-						_("##") _("&") _("_s\"") _("execute");
+	_("exit") _("create") _("lit") _("<0") _(":") _("_;") _("+") _("-") _("*") _("/") _("%") _("drop") _("dup")
+		_("pickr") _("_immediate") _("@@") _("!!") _("swap") _("rot") _("jmp") _("jmp0") _("'") _("[']") _("_(") _("_\\") _(">r") _("r>")
+			_("=") _("sys") _("pick") _(",,") _("key") _("lits") _("##") _("&") _("_s\"") _("execute");
 
 /* Stacks and dictionary memory */
 
