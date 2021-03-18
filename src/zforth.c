@@ -807,7 +807,7 @@ LABEL_TICK:
 	}
 	if (find_word(input, &addr, &xt) == 0)
 		zf_abort(ZF_ABORT_NOT_A_WORD);
-	zf_push(xt);
+	zf_push(xt + 1);
 	return;
 
 LABEL_TICKC:
@@ -906,7 +906,7 @@ LABEL_STR:
 
 LABEL_EXECUTE:
 	addr = zf_pop();
-	execute(addr);
+	execute(addr - 1);
 	return;
 }
 
