@@ -199,7 +199,6 @@ zf_cell zf_pop(void) {
 }
 
 const char *zf_pop_string() {
-  zf_pop();
   zf_addr addr = zf_pop();
   return (const char *)&dict[addr];
 }
@@ -754,7 +753,6 @@ LABEL_KEY:
 LABEL_LITS:
   ip += dict_get_cell(ip, &d1);
   zf_push(ip);
-  zf_push(d1);
   ip += d1;
   return;
 
@@ -773,15 +771,13 @@ LABEL_STR:
     return;
   }
 
-  if (input[0] == '"' && dict[TMP - 1] != '\\') {
+  if (input[0] == '"' && dict[HERE - 1] != '\\') {
     dict[HERE++] = 0;
     addr = zf_pick(0);
     len = HERE - addr;
     if (COMPILING) {
       zf_pop();
       dict_put_cell_typed(HERE - len - 1, len, ZF_MEM_SIZE_VAR);
-    } else {
-      zf_push(len);
     }
     return;
   }
