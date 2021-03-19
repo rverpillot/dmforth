@@ -1,18 +1,17 @@
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <limits.h>
 #include <errno.h>
-#include <string.h>
+#include <getopt.h>
+#include <limits.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
-#include <math.h>
+#include <string.h>
 
 #ifdef USE_READLINE
-#include <readline/readline.h>
 #include <readline/history.h>
+#include <readline/readline.h>
 #endif
 
 #include "zforth.h"
@@ -23,57 +22,57 @@
 
 zf_result do_eval(const char *src, int line, const char *buf)
 {
-	const char *msg = NULL;
+  const char *msg = NULL;
 
-	zf_result rv = zf_eval(buf);
+  zf_result rv = zf_eval(buf);
 
-	switch (rv)
-	{
-	case ZF_OK:
-		break;
-	case ZF_ABORT_INTERNAL_ERROR:
-		msg = "internal error";
-		break;
-	case ZF_ABORT_OUTSIDE_MEM:
-		msg = "outside memory";
-		break;
-	case ZF_ABORT_DSTACK_OVERRUN:
-		msg = "dstack overrun";
-		break;
-	case ZF_ABORT_DSTACK_UNDERRUN:
-		msg = "dstack underrun";
-		break;
-	case ZF_ABORT_RSTACK_OVERRUN:
-		msg = "rstack overrun";
-		break;
-	case ZF_ABORT_RSTACK_UNDERRUN:
-		msg = "rstack underrun";
-		break;
-	case ZF_ABORT_NOT_A_WORD:
-		msg = "not a word";
-		break;
-	case ZF_ABORT_COMPILE_ONLY_WORD:
-		msg = "compile-only word";
-		break;
-	case ZF_ABORT_INVALID_SIZE:
-		msg = "invalid size";
-		break;
-	case ZF_ABORT_DIVISION_BY_ZERO:
-		msg = "division by zero";
-		break;
-	default:
-		msg = "unknown error";
-	}
+  switch (rv)
+  {
+  case ZF_OK:
+    break;
+  case ZF_ABORT_INTERNAL_ERROR:
+    msg = "internal error";
+    break;
+  case ZF_ABORT_OUTSIDE_MEM:
+    msg = "outside memory";
+    break;
+  case ZF_ABORT_DSTACK_OVERRUN:
+    msg = "dstack overrun";
+    break;
+  case ZF_ABORT_DSTACK_UNDERRUN:
+    msg = "dstack underrun";
+    break;
+  case ZF_ABORT_RSTACK_OVERRUN:
+    msg = "rstack overrun";
+    break;
+  case ZF_ABORT_RSTACK_UNDERRUN:
+    msg = "rstack underrun";
+    break;
+  case ZF_ABORT_NOT_A_WORD:
+    msg = "not a word";
+    break;
+  case ZF_ABORT_COMPILE_ONLY_WORD:
+    msg = "compile-only word";
+    break;
+  case ZF_ABORT_INVALID_SIZE:
+    msg = "invalid size";
+    break;
+  case ZF_ABORT_DIVISION_BY_ZERO:
+    msg = "division by zero";
+    break;
+  default:
+    msg = "unknown error";
+  }
 
-	if (msg)
-	{
-		fprintf(stderr, "\033[31m");
-		if (src)
-			fprintf(stderr, "%s:%d: ", src, line);
-		fprintf(stderr, "%s\033[0m\n", msg);
-	}
+  if (msg)
+  {
+    fprintf(stderr, "\033[31m");
+    if (src)
+      fprintf(stderr, "%s:%d: ", src, line);
+    fprintf(stderr, "%s\033[0m\n", msg);
+  }
 
-	return rv;
+  return rv;
 }
 
 /*
@@ -82,22 +81,22 @@ zf_result do_eval(const char *src, int line, const char *buf)
 
 void include(const char *fname)
 {
-	char buf[256];
+  char buf[256];
 
-	FILE *f = fopen(fname, "rb");
-	int line = 1;
-	if (f)
-	{
-		while (fgets(buf, sizeof(buf), f))
-		{
-			do_eval(fname, line++, buf);
-		}
-		fclose(f);
-	}
-	else
-	{
-		fprintf(stderr, "error opening file '%s': %s\n", fname, strerror(errno));
-	}
+  FILE *f = fopen(fname, "rb");
+  int line = 1;
+  if (f)
+  {
+    while (fgets(buf, sizeof(buf), f))
+    {
+      do_eval(fname, line++, buf);
+    }
+    fclose(f);
+  }
+  else
+  {
+    fprintf(stderr, "error opening file '%s': %s\n", fname, strerror(errno));
+  }
 }
 
 /*
@@ -106,14 +105,14 @@ void include(const char *fname)
 
 static void save(const char *fname)
 {
-	size_t len;
-	void *p = zf_dump(&len);
-	FILE *f = fopen(fname, "wb");
-	if (f)
-	{
-		fwrite(p, 1, len, f);
-		fclose(f);
-	}
+  size_t len;
+  void *p = zf_dump(&len);
+  FILE *f = fopen(fname, "wb");
+  if (f)
+  {
+    fwrite(p, 1, len, f);
+    fclose(f);
+  }
 }
 
 /*
@@ -122,18 +121,18 @@ static void save(const char *fname)
 
 static void load(const char *fname)
 {
-	size_t len;
-	void *p = zf_dump(&len);
-	FILE *f = fopen(fname, "rb");
-	if (f)
-	{
-		fread(p, 1, len, f);
-		fclose(f);
-	}
-	else
-	{
-		perror("read");
-	}
+  size_t len;
+  void *p = zf_dump(&len);
+  FILE *f = fopen(fname, "rb");
+  if (f)
+  {
+    fread(p, 1, len, f);
+    fclose(f);
+  }
+  else
+  {
+    perror("read");
+  }
 }
 
 /*
@@ -142,102 +141,113 @@ static void load(const char *fname)
 
 zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
 {
-	switch ((int)id)
-	{
+  switch ((int)id)
+  {
+    /* The core system callbacks */
 
-		/* The core system callbacks */
+  case ZF_SYSCALL_EMIT:
+    putchar((char)zf_pop());
+    fflush(stdout);
+    break;
 
-	case ZF_SYSCALL_EMIT:
-		putchar((char)zf_pop());
-		fflush(stdout);
-		break;
+  case ZF_SYSCALL_PRINT:
+    printf(ZF_CELL_FMT " ", zf_pop());
+    break;
 
-	case ZF_SYSCALL_PRINT:
-		printf(ZF_CELL_FMT " ", zf_pop());
-		break;
+  case ZF_SYSCALL_TYPE:
+  {
+    zf_cell len = zf_pop();
+    void *buf = (uint8_t *)zf_dump(NULL) + (int)zf_pop();
+    (void)fwrite(buf, 1, len, stdout);
+    fflush(stdout);
+  }
+  break;
 
-	case ZF_SYSCALL_TELL:
-	{
-		zf_cell len = zf_pop();
-		void *buf = (uint8_t *)zf_dump(NULL) + (int)zf_pop();
-		(void)fwrite(buf, 1, len, stdout);
-		fflush(stdout);
-	}
-	break;
+  case ZF_SYSCALL_DUMP:
+  {
+    zf_cell len = zf_pop();
+    uint8_t *buf = (uint8_t *)zf_dump(NULL) + (int)zf_pop();
+    for (int i = 0; i < len; i++)
+    {
+      printf("%02X ", buf[i]);
+    }
+    printf("\n");
+  }
+  break;
 
-		/* Application specific callbacks */
+    /* Application specific callbacks */
 
-	case ZF_SYSCALL_USER + 0:
-		printf("\n");
-		exit(0);
-		break;
+  case ZF_SYSCALL_USER + 0:
+    printf("\n");
+    exit(0);
+    break;
 
-	case ZF_SYSCALL_USER + 1:
-		printf("%s", (const char *)zf_pop_string());
-		break;
+  case ZF_SYSCALL_USER + 1:
+    printf("%s", (const char *)zf_pop_string());
+    break;
 
-	case ZF_SYSCALL_USER + 2:
-		if (input == NULL)
-		{
-			return ZF_INPUT_PASS_WORD;
-		}
-		include(input);
-		break;
+  case ZF_SYSCALL_USER + 2:
+    if (input == NULL)
+    {
+      return ZF_INPUT_PASS_WORD;
+    }
+    include(input);
+    break;
 
-	case ZF_SYSCALL_USER + 3:
-		save("zforth.save");
-		break;
+  case ZF_SYSCALL_USER + 3:
+    save("zforth.save");
+    break;
 
-	case ZF_SYSCALL_USER + 4:
-		zf_dstack_show();
-		break;
+  case ZF_SYSCALL_USER + 4:
+    zf_dstack_show();
+    break;
 
-	case ZF_SYSCALL_USER + 5:
-		zf_push(sizeof(zf_cell));
-		break;
+  case ZF_SYSCALL_USER + 5:
+    zf_push(sizeof(zf_cell));
+    break;
 
-	case ZF_SYSCALL_USER + 6:
-	{
-		// size_t len = 0;
-		// const char *fmt = zf_pop_string(&len);
-		// int count = 0;
-		// zf_cell args[10];
-		// for (int i = 0; i < len && i < 10; i++)
-		// {
-		// 	if (fmt[i] == '%')
-		// 		count++;
-		// 	if (i > 0 && fmt[i - 1] == '%')
-		// 	{
-		// 		count--;
-		// 		continue;
-		// 	}
-		// 	for (; i < len && i < 10; i++)
-		// 	{
-		// 		if (strchr("cdieEfgGosuxX", fmt[i]))
-		// 		{
-		// 			size_t len;
-		// 			switch (fmt[i])
-		// 			{
-		// 			case 's':
-		// 				args[count - 1] = (zf_cell)zf_pop_string(&len);
-		// 				break;
+  case ZF_SYSCALL_USER + 6:
+  {
+    // size_t len = 0;
+    // const char *fmt = zf_pop_string(&len);
+    // int count = 0;
+    // zf_cell args[10];
+    // for (int i = 0; i < len && i < 10; i++)
+    // {
+    // 	if (fmt[i] == '%')
+    // 		count++;
+    // 	if (i > 0 && fmt[i - 1] == '%')
+    // 	{
+    // 		count--;
+    // 		continue;
+    // 	}
+    // 	for (; i < len && i < 10; i++)
+    // 	{
+    // 		if (strchr("cdieEfgGosuxX", fmt[i]))
+    // 		{
+    // 			size_t len;
+    // 			switch (fmt[i])
+    // 			{
+    // 			case 's':
+    // 				args[count - 1] =
+    // (zf_cell)zf_pop_string(&len); 				break;
 
-		// 			default:
-		// 				args[count - 1] = zf_pop();
-		// 				break;
-		// 			}
-		// 			break;
-		// 		}
-		// 	}
-		// }
-	}
+    // 			default:
+    // 				args[count - 1] = zf_pop();
+    // 				break;
+    // 			}
+    // 			break;
+    // 		}
+    // 	}
+    // }
+  }
 
-	default:
-		printf("unhandled syscall %d\n", id);
-		break;
-	}
+  default:
+    printf("unhandled syscall %d\n", id);
+    break;
+  }
 
-	return ZF_INPUT_INTERPRET;
+  return ZF_INPUT_INTERPRET;
 }
 
 /*
@@ -246,9 +256,9 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
 
 void zf_host_trace(const char *fmt, va_list va)
 {
-	fprintf(stderr, "\033[1;30m");
-	vfprintf(stderr, fmt, va);
-	fprintf(stderr, "\033[0m");
+  fprintf(stderr, "\033[1;30m");
+  vfprintf(stderr, fmt, va);
+  fprintf(stderr, "\033[0m");
 }
 
 /*
@@ -257,24 +267,24 @@ void zf_host_trace(const char *fmt, va_list va)
 
 zf_cell zf_host_parse_num(const char *buf)
 {
-	zf_cell v;
-	int r = sscanf(buf, "%lf", &v);
-	if (r == 0)
-	{
-		zf_abort(ZF_ABORT_NOT_A_WORD);
-	}
-	return v;
+  zf_cell v;
+  int r = sscanf(buf, "%lf", &v);
+  if (r == 0)
+  {
+    zf_abort(ZF_ABORT_NOT_A_WORD);
+  }
+  return v;
 }
 
 void usage(void)
 {
-	fprintf(stderr,
-			"usage: zfort [options] [src ...]\n"
-			"\n"
-			"Options:\n"
-			"   -h         show help\n"
-			"   -t         enable tracing\n"
-			"   -l FILE    load dictionary from FILE\n");
+  fprintf(stderr,
+          "usage: zfort [options] [src ...]\n"
+          "\n"
+          "Options:\n"
+          "   -h         show help\n"
+          "   -t         enable tracing\n"
+          "   -l FILE    load dictionary from FILE\n");
 }
 
 /*
@@ -283,99 +293,97 @@ void usage(void)
 
 int main(int argc, char **argv)
 {
-	int i;
-	int c;
-	int trace = 0;
-	int line = 0;
-	const char *fname_load = NULL;
+  int i;
+  int c;
+  int trace = 0;
+  int line = 0;
+  const char *fname_load = NULL;
 
-	/* Parse command line options */
+  /* Parse command line options */
 
-	while ((c = getopt(argc, argv, "hl:t")) != -1)
-	{
-		switch (c)
-		{
-		case 't':
-			trace = 1;
-			break;
-		case 'l':
-			fname_load = optarg;
-			break;
-		case 'h':
-			usage();
-			exit(0);
-		}
-	}
+  while ((c = getopt(argc, argv, "hl:t")) != -1)
+  {
+    switch (c)
+    {
+    case 't':
+      trace = 1;
+      break;
+    case 'l':
+      fname_load = optarg;
+      break;
+    case 'h':
+      usage();
+      exit(0);
+    }
+  }
 
-	argc -= optind;
-	argv += optind;
+  argc -= optind;
+  argv += optind;
 
-	/* Initialize zforth */
+  /* Initialize zforth */
 
-	zf_init(trace);
+  zf_init(trace);
 
-	/* Load dict from disk if requested, otherwise bootstrap fort
-	 * dictionary */
+  /* Load dict from disk if requested, otherwise bootstrap fort
+   * dictionary */
 
-	if (fname_load)
-	{
-		load(fname_load);
-	}
-	else
-	{
-		zf_bootstrap();
-	}
+  if (fname_load)
+  {
+    load(fname_load);
+  }
+  else
+  {
+    zf_bootstrap();
+  }
 
-	/* Include files from command line */
+  /* Include files from command line */
 
-	for (i = 0; i < argc; i++)
-	{
-		include(argv[i]);
-	}
+  for (i = 0; i < argc; i++)
+  {
+    include(argv[i]);
+  }
 
-	/* Interactive interpreter: read a line using readline library,
-	 * and pass to zf_eval() for evaluation*/
+  /* Interactive interpreter: read a line using readline library,
+   * and pass to zf_eval() for evaluation*/
 
 #ifdef USE_READLINE
 
-	read_history(".zforth.hist");
+  read_history(".zforth.hist");
 
-	for (;;)
-	{
+  for (;;)
+  {
+    char *buf = readline("");
+    if (buf == NULL)
+      break;
 
-		char *buf = readline("");
-		if (buf == NULL)
-			break;
+    if (strlen(buf) > 0)
+    {
+      do_eval("stdin", ++line, buf);
+      printf("\n");
 
-		if (strlen(buf) > 0)
-		{
+      add_history(buf);
+      write_history(".zforth.hist");
+    }
 
-			do_eval("stdin", ++line, buf);
-			printf("\n");
-
-			add_history(buf);
-			write_history(".zforth.hist");
-		}
-
-		free(buf);
-	}
+    free(buf);
+  }
 #else
-	for (;;)
-	{
-		char buf[4096];
-		if (fgets(buf, sizeof(buf), stdin))
-		{
-			do_eval("stdin", ++line, buf);
-			printf("\n");
-		}
-		else
-		{
-			break;
-		}
-	}
+  for (;;)
+  {
+    char buf[4096];
+    if (fgets(buf, sizeof(buf), stdin))
+    {
+      do_eval("stdin", ++line, buf);
+      printf("\n");
+    }
+    else
+    {
+      break;
+    }
+  }
 #endif
 
-	return 0;
+  return 0;
 }
 
 /*

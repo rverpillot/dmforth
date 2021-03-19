@@ -3,9 +3,10 @@
 
 : emit    0 sys ;
 : .       1 sys ;
-: tell    2 sys ;
+: type    2 sys ;
+: dump    3 sys ;
 : quit    128 sys ;
-: type    129 sys ;
+: puts    129 sys ;
 : include 130 sys ;
 : save    131 sys ;
 : .s      132 sys ;
@@ -30,6 +31,8 @@
 
 : over 1 pick ;
 : +!   dup @ rot + swap ! ;
+: 1+   1 + ;
+: 1-   1 - ;
 : inc  1 swap +! ;
 : dec  -1 swap +! ;
 : <    - <0 ;
@@ -77,22 +80,26 @@
 : loop+ ['] r> , ['] + , ['] dup , ['] >r , ['] lit , 1 , ['] pickr , ['] > , ['] jmp0 , , ['] r> , ['] drop , ['] r> , ['] drop , ; immediate
 : loop ['] lit , 1 , postpone loop+ ;  immediate
 
+( string )
+
+: strlen dup 1- begin 1+ dup @ =0 until swap - ;
+: count dup strlen ;
 
 ( methods for handling the dictionary )
 
 ( 'next' increases the given dictionary address by the size of the cell
   located at that address )
 
-: next dup # + ;
+: next/cell dup # + ;
 
 ( 'words' generates a list of all define words )
 
-: name dup @ 31 & swap next dup next rot tell @ ;
+: name dup @ 31 & swap next/cell dup next/cell rot type @ ;
 : words latest @ begin name 32 emit dup 0 = until cr drop ;
 
 
 
-s" Welcome to zForth, " type here . s" bytes used" type cr ;
+s" Welcome to zForth, " puts here . s" bytes used" puts cr ;
 
 
 

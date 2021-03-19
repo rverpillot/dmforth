@@ -19,8 +19,8 @@
  */
 
 #if ZF_ENABLE_BOUNDARY_CHECKS
-#define CHECK(exp, abort)                                                      \
-  if (!(exp))                                                                  \
+#define CHECK(exp, abort) \
+  if (!(exp))             \
     zf_abort(abort);
 #else
 #define CHECK(exp, abort)
@@ -34,7 +34,8 @@
 
 #define _(s) s "\0"
 
-typedef enum {
+typedef enum
+{
   PRIM_EXIT,
   PRIM_CREATE,
   PRIM_LIT,
@@ -109,7 +110,7 @@ static jmp_buf jmpbuf;
 #define LATEST uservar[1]    /* pointer to last compiled word */
 #define TRACE uservar[2]     /* trace enable flag */
 #define COMPILING uservar[3] /* compiling flag */
-#define POSTPONE                                                               \
+#define POSTPONE \
   uservar[4] /* flag to indicate next imm word should be compiled */
 #define TMP uservar[5]
 #define USERVAR_COUNT 6
@@ -131,8 +132,10 @@ static void dict_get_bytes(zf_addr addr, void *buf, size_t len);
 
 #if ZF_ENABLE_TRACE
 
-static void trace(const char *fmt, ...) {
-  if (TRACE) {
+static void trace(const char *fmt, ...)
+{
+  if (TRACE)
+  {
     va_list va;
     va_start(va, fmt);
     zf_host_trace(fmt, va);
@@ -140,11 +143,13 @@ static void trace(const char *fmt, ...) {
   }
 }
 
-static const char *op_name(zf_addr addr) {
+static const char *op_name(zf_addr addr)
+{
   zf_addr w = LATEST;
   static char name[32];
 
-  while (TRACE && w) {
+  while (TRACE && w)
+  {
     zf_addr xt, p = w;
     zf_cell d, link, op2;
     int lenflags;
@@ -156,7 +161,8 @@ static const char *op_name(zf_addr addr) {
     dict_get_cell(xt, &op2);
 
     if (((lenflags & ZF_FLAG_PRIM) && addr == (zf_addr)op2) || addr == w ||
-        addr == xt) {
+        addr == xt)
+    {
       int l = ZF_FLAG_LEN(lenflags);
       dict_get_bytes(p, name, l);
       name[l] = '\0';
@@ -169,7 +175,9 @@ static const char *op_name(zf_addr addr) {
 }
 
 #else
-static void trace(const char *fmt, ...) {}
+static void trace(const char *fmt, ...)
+{
+}
 static const char *op_name(zf_addr addr) { return NULL; }
 #endif
 
@@ -184,13 +192,15 @@ void zf_abort(zf_result reason) { longjmp(jmpbuf, reason); }
  * Stack operations.
  */
 
-void zf_push(zf_cell v) {
+void zf_push(zf_cell v)
+{
   CHECK(dsp < ZF_DSTACK_SIZE, ZF_ABORT_DSTACK_OVERRUN);
   trace("»" ZF_CELL_FMT " ", v);
   dstack[dsp++] = v;
 }
 
-zf_cell zf_pop(void) {
+zf_cell zf_pop(void)
+{
   zf_cell v;
   CHECK(dsp > 0, ZF_ABORT_DSTACK_UNDERRUN);
   v = dstack[--dsp];
@@ -198,25 +208,29 @@ zf_cell zf_pop(void) {
   return v;
 }
 
-const char *zf_pop_string() {
+const char *zf_pop_string()
+{
   zf_addr addr = zf_pop();
   return (const char *)&dict[addr];
 }
 
-zf_cell zf_pick(zf_addr n) {
+zf_cell zf_pick(zf_addr n)
+{
   CHECK(n < dsp, ZF_ABORT_DSTACK_UNDERRUN);
   return dstack[dsp - n - 1];
 }
 
 unsigned int zf_stack_count() { return dsp; }
 
-static void zf_pushr(zf_cell v) {
+static void zf_pushr(zf_cell v)
+{
   CHECK(rsp < ZF_RSTACK_SIZE, ZF_ABORT_RSTACK_OVERRUN);
   trace("r»" ZF_CELL_FMT " ", v);
   rstack[rsp++] = v;
 }
 
-static zf_cell zf_popr(void) {
+static zf_cell zf_popr(void)
+{
   zf_cell v;
   CHECK(rsp > 0, ZF_ABORT_RSTACK_UNDERRUN);
   v = rstack[--rsp];
@@ -224,14 +238,17 @@ static zf_cell zf_popr(void) {
   return v;
 }
 
-zf_cell zf_pickr(zf_addr n) {
+zf_cell zf_pickr(zf_addr n)
+{
   CHECK(n < rsp, ZF_ABORT_RSTACK_UNDERRUN);
   return rstack[rsp - n - 1];
 }
 
-void zf_dstack_show() {
+void zf_dstack_show()
+{
   printf("<%d>", dsp);
-  for (int i = 0; i < (int)dsp; i++) {
+  for (int i = 0; i < (int)dsp; i++)
+  {
     printf(" " ZF_CELL_FMT, dstack[i]);
   }
   printf("\n");
@@ -241,7 +258,8 @@ void zf_dstack_show() {
  * All access to dictionary memory is done through these functions.
  */
 
-static zf_addr dict_put_bytes(zf_addr addr, const void *buf, size_t len) {
+static zf_addr dict_put_bytes(zf_addr addr, const void *buf, size_t len)
+{
   const uint8_t *p = (const uint8_t *)buf;
   size_t i = len;
   CHECK(addr < ZF_DICT_SIZE - len, ZF_ABORT_OUTSIDE_MEM);
@@ -250,7 +268,8 @@ static zf_addr dict_put_bytes(zf_addr addr, const void *buf, size_t len) {
   return len;
 }
 
-static void dict_get_bytes(zf_addr addr, void *buf, size_t len) {
+static void dict_get_bytes(zf_addr addr, void *buf, size_t len)
+{
   uint8_t *p = (uint8_t *)buf;
   CHECK(addr < ZF_DICT_SIZE - len, ZF_ABORT_OUTSIDE_MEM);
   while (len--)
@@ -268,37 +287,44 @@ static void dict_get_bytes(zf_addr addr, void *buf, size_t len) {
  */
 
 #if ZF_ENABLE_TYPED_MEM_ACCESS
-#define GET(s, t)                                                              \
-  if (size == s) {                                                             \
-    t v##t;                                                                    \
-    dict_get_bytes(addr, &v##t, sizeof(t));                                    \
-    *v = v##t;                                                                 \
-    return sizeof(t);                                                          \
+#define GET(s, t)                           \
+  if (size == s)                            \
+  {                                         \
+    t v##t;                                 \
+    dict_get_bytes(addr, &v##t, sizeof(t)); \
+    *v = v##t;                              \
+    return sizeof(t);                       \
   };
-#define PUT(s, t, val)                                                         \
-  if (size == s) {                                                             \
-    t v##t = val;                                                              \
-    return dict_put_bytes(addr, &v##t, sizeof(t));                             \
+#define PUT(s, t, val)                             \
+  if (size == s)                                   \
+  {                                                \
+    t v##t = val;                                  \
+    return dict_put_bytes(addr, &v##t, sizeof(t)); \
   }
 #else
 #define GET(s, t)
 #define PUT(s, t, val)
 #endif
 
-static zf_addr dict_put_cell_typed(zf_addr addr, zf_cell v, zf_mem_size size) {
+static zf_addr dict_put_cell_typed(zf_addr addr, zf_cell v, zf_mem_size size)
+{
   unsigned int vi = v;
   uint8_t t[2];
 
   trace("\n+" ZF_ADDR_FMT " " ZF_ADDR_FMT, addr, (zf_addr)v);
 
-  if (size == ZF_MEM_SIZE_VAR) {
-    if ((v - vi) == 0) {
-      if (vi < 128) {
+  if (size == ZF_MEM_SIZE_VAR)
+  {
+    if ((v - vi) == 0)
+    {
+      if (vi < 128)
+      {
         trace(" ¹");
         t[0] = vi;
         return dict_put_bytes(addr, t, 1);
       }
-      if (vi < 16384) {
+      if (vi < 16384)
+      {
         trace(" ²");
         t[0] = (vi >> 8) | 0x80;
         t[1] = vi;
@@ -324,20 +350,28 @@ static zf_addr dict_put_cell_typed(zf_addr addr, zf_cell v, zf_mem_size size) {
   return 0;
 }
 
-static zf_addr dict_get_cell_typed(zf_addr addr, zf_cell *v, zf_mem_size size) {
+static zf_addr dict_get_cell_typed(zf_addr addr, zf_cell *v, zf_mem_size size)
+{
   uint8_t t[2];
   dict_get_bytes(addr, t, sizeof(t));
 
-  if (size == ZF_MEM_SIZE_VAR) {
-    if (t[0] & 0x80) {
-      if (t[0] == 0xff) {
+  if (size == ZF_MEM_SIZE_VAR)
+  {
+    if (t[0] & 0x80)
+    {
+      if (t[0] == 0xff)
+      {
         dict_get_bytes(addr + 1, v, sizeof(*v));
         return 1 + sizeof(*v);
-      } else {
+      }
+      else
+      {
         *v = ((t[0] & 0x3f) << 8) + t[1];
         return 2;
       }
-    } else {
+    }
+    else
+    {
       *v = t[0];
       return 1;
     }
@@ -359,11 +393,13 @@ static zf_addr dict_get_cell_typed(zf_addr addr, zf_cell *v, zf_mem_size size) {
  * Shortcut functions for cell access with variable cell size
  */
 
-static zf_addr dict_put_cell(zf_addr addr, zf_cell v) {
+static zf_addr dict_put_cell(zf_addr addr, zf_cell v)
+{
   return dict_put_cell_typed(addr, v, ZF_MEM_SIZE_VAR);
 }
 
-static zf_addr dict_get_cell(zf_addr addr, zf_cell *v) {
+static zf_addr dict_get_cell(zf_addr addr, zf_cell *v)
+{
   return dict_get_cell_typed(addr, v, ZF_MEM_SIZE_VAR);
 }
 
@@ -372,26 +408,31 @@ static zf_addr dict_get_cell(zf_addr addr, zf_cell *v) {
  * increase the pointer
  */
 
-static void dict_add_cell_typed(zf_addr addr, zf_cell v, zf_mem_size size) {
+static void dict_add_cell_typed(zf_addr addr, zf_cell v, zf_mem_size size)
+{
   HERE += dict_put_cell_typed(addr, v, size);
   trace(" ");
 }
 
-static void dict_add_cell(zf_cell v) {
+static void dict_add_cell(zf_cell v)
+{
   dict_add_cell_typed(HERE, v, ZF_MEM_SIZE_VAR);
 }
 
-static void dict_add_op(zf_addr op) {
+static void dict_add_op(zf_addr op)
+{
   dict_add_cell(op);
   trace("+%s ", op_name(op));
 }
 
-static void dict_add_lit(zf_cell v) {
+static void dict_add_lit(zf_cell v)
+{
   dict_add_op(PRIM_LIT);
   dict_add_cell(v);
 }
 
-static void dict_add_str(const char *s) {
+static void dict_add_str(const char *s)
+{
   size_t l;
   trace("\n+" ZF_ADDR_FMT " " ZF_ADDR_FMT " s '%s'", HERE, 0, s);
   l = strlen(s);
@@ -402,7 +443,8 @@ static void dict_add_str(const char *s) {
  * Create new word, adjusting HERE and LATEST accordingly
  */
 
-static void create(const char *name, int flags) {
+static void create(const char *name, int flags)
+{
   zf_addr here_prev;
   trace("\n=== create '%s'", name);
   here_prev = HERE;
@@ -417,20 +459,24 @@ static void create(const char *name, int flags) {
  * Find word in dictionary, returning address and execution token
  */
 
-static int find_word(const char *name, zf_addr *word, zf_addr *code) {
+static int find_word(const char *name, zf_addr *word, zf_addr *code)
+{
   zf_addr w = LATEST;
   size_t namelen = strlen(name);
 
-  while (w) {
+  while (w)
+  {
     zf_cell link, d;
     zf_addr p = w;
     size_t len;
     p += dict_get_cell(p, &d);
     p += dict_get_cell(p, &link);
     len = ZF_FLAG_LEN((int)d);
-    if (len == namelen) {
+    if (len == namelen)
+    {
       const char *name2 = (const char *)&dict[p];
-      if (memcmp(name, name2, len) == 0) {
+      if (memcmp(name, name2, len) == 0)
+      {
         *word = w;
         *code = p + len;
         return 1;
@@ -446,7 +492,8 @@ static int find_word(const char *name, zf_addr *word, zf_addr *code) {
  * Set 'immediate' flag in last compiled word
  */
 
-static void make_immediate(void) {
+static void make_immediate(void)
+{
   zf_cell lenflags;
   dict_get_cell(LATEST, &lenflags);
   dict_put_cell(LATEST, (int)lenflags | ZF_FLAG_IMMEDIATE);
@@ -456,8 +503,10 @@ static void make_immediate(void) {
  * Inner interpreter
  */
 
-static void run(const char *input) {
-  while (ip != 0) {
+static void run(const char *input)
+{
+  while (ip != 0)
+  {
     zf_cell d;
     zf_addr i, ip_org = ip;
     zf_addr l = dict_get_cell(ip, &d);
@@ -469,17 +518,21 @@ static void run(const char *input) {
 
     ip += l;
 
-    if (code <= PRIM_COUNT) {
+    if (code <= PRIM_COUNT)
+    {
       do_prim((zf_prim)code, input);
 
       /* If the prim requests input, restore IP so that the
        * next time around we call the same prim again */
 
-      if (input_state != ZF_INPUT_INTERPRET) {
+      if (input_state != ZF_INPUT_INTERPRET)
+      {
         ip = ip_org;
         break;
       }
-    } else {
+    }
+    else
+    {
       trace("%s/" ZF_ADDR_FMT " ", op_name(code), code);
       zf_pushr(ip);
       ip = code;
@@ -493,7 +546,8 @@ static void run(const char *input) {
  * Execute bytecode from given address
  */
 
-static void execute(zf_addr addr) {
+static void execute(zf_addr addr)
+{
   ip = addr;
   rsp = 0;
   zf_pushr(0);
@@ -502,11 +556,15 @@ static void execute(zf_addr addr) {
   run(NULL);
 }
 
-static zf_addr peek(zf_addr addr, zf_cell *val, int len) {
-  if (addr < USERVAR_COUNT) {
+static zf_addr peek(zf_addr addr, zf_cell *val, int len)
+{
+  if (addr < USERVAR_COUNT)
+  {
     *val = uservar[addr];
     return 1;
-  } else {
+  }
+  else
+  {
     return dict_get_cell_typed(addr, val, (zf_mem_size)len);
   }
 }
@@ -515,25 +573,27 @@ static zf_addr peek(zf_addr addr, zf_cell *val, int len) {
  * Run primitive opcode
  */
 
-static void do_prim(zf_prim op, const char *input) {
+static void do_prim(zf_prim op, const char *input)
+{
   zf_cell d1, d2, d3;
   zf_addr addr, len, xt;
 
   trace("(%s) ", op_name(op));
 
   static void *labels[] = {
-      &&LABEL_EXIT,     &&LABEL_CREATE,  &&LABEL_LIT,       &&LABEL_LTZ,
-      &&LABEL_COL,      &&LABEL_SEMICOL, &&LABEL_ADD,       &&LABEL_SUB,
-      &&LABEL_MUL,      &&LABEL_DIV,     &&LABEL_MOD,       &&LABEL_DROP,
-      &&LABEL_DUP,      &&LABEL_PICKR,   &&LABEL_IMMEDIATE, &&LABEL_PEEK,
-      &&LABEL_POKE,     &&LABEL_SWAP,    &&LABEL_ROT,       &&LABEL_JMP,
-      &&LABEL_JMP0,     &&LABEL_TICK,    &&LABEL_TICKC,     &&LABEL_COMMENT,
-      &&LABEL_COMMENT2, &&LABEL_PUSHR,   &&LABEL_POPR,      &&LABEL_EQUAL,
-      &&LABEL_SYS,      &&LABEL_PICK,    &&LABEL_COMMA,     &&LABEL_KEY,
-      &&LABEL_LITS,     &&LABEL_LEN,     &&LABEL_AND,       &&LABEL_STR,
+      &&LABEL_EXIT, &&LABEL_CREATE, &&LABEL_LIT, &&LABEL_LTZ,
+      &&LABEL_COL, &&LABEL_SEMICOL, &&LABEL_ADD, &&LABEL_SUB,
+      &&LABEL_MUL, &&LABEL_DIV, &&LABEL_MOD, &&LABEL_DROP,
+      &&LABEL_DUP, &&LABEL_PICKR, &&LABEL_IMMEDIATE, &&LABEL_PEEK,
+      &&LABEL_POKE, &&LABEL_SWAP, &&LABEL_ROT, &&LABEL_JMP,
+      &&LABEL_JMP0, &&LABEL_TICK, &&LABEL_TICKC, &&LABEL_COMMENT,
+      &&LABEL_COMMENT2, &&LABEL_PUSHR, &&LABEL_POPR, &&LABEL_EQUAL,
+      &&LABEL_SYS, &&LABEL_PICK, &&LABEL_COMMA, &&LABEL_KEY,
+      &&LABEL_LITS, &&LABEL_LEN, &&LABEL_AND, &&LABEL_STR,
       &&LABEL_EXECUTE};
 
-  if (op >= PRIM_COUNT) {
+  if (op >= PRIM_COUNT)
+  {
     zf_abort(ZF_ABORT_INTERNAL_ERROR);
     return;
   }
@@ -541,9 +601,12 @@ static void do_prim(zf_prim op, const char *input) {
   goto *labels[op];
 
 LABEL_CREATE:
-  if (input == NULL) {
+  if (input == NULL)
+  {
     input_state = ZF_INPUT_PASS_WORD;
-  } else {
+  }
+  else
+  {
     create(input, 0);
     dict_add_lit(HERE + 4);
     dict_add_op(PRIM_EXIT);
@@ -551,9 +614,12 @@ LABEL_CREATE:
   return;
 
 LABEL_COL:
-  if (input == NULL) {
+  if (input == NULL)
+  {
     input_state = ZF_INPUT_PASS_WORD;
-  } else {
+  }
+  else
+  {
     create(input, 0);
     COMPILING = 1;
   }
@@ -595,7 +661,8 @@ LABEL_POKE:
   d2 = zf_pop();
   addr = zf_pop();
   d1 = zf_pop();
-  if (addr < USERVAR_COUNT) {
+  if (addr < USERVAR_COUNT)
+  {
     uservar[addr] = d1;
     return;
   }
@@ -637,7 +704,8 @@ LABEL_ADD:
 LABEL_SYS:
   d1 = zf_pop();
   input_state = zf_host_sys((zf_syscall_id)d1, input);
-  if (input_state != ZF_INPUT_INTERPRET) {
+  if (input_state != ZF_INPUT_INTERPRET)
+  {
     zf_push(d1); /* re-push id to resume */
   }
   return;
@@ -663,7 +731,8 @@ LABEL_MUL:
   return;
 
 LABEL_DIV:
-  if ((d2 = zf_pop()) == 0) {
+  if ((d2 = zf_pop()) == 0)
+  {
     zf_abort(ZF_ABORT_DIVISION_BY_ZERO);
   }
   d1 = zf_pop();
@@ -671,7 +740,8 @@ LABEL_DIV:
   return;
 
 LABEL_MOD:
-  if ((int)(d2 = zf_pop()) == 0) {
+  if ((int)(d2 = zf_pop()) == 0)
+  {
     zf_abort(ZF_ABORT_DIVISION_BY_ZERO);
   }
   d1 = zf_pop();
@@ -690,14 +760,16 @@ LABEL_JMP:
 
 LABEL_JMP0:
   ip += dict_get_cell(ip, &d1);
-  if (zf_pop() == 0) {
+  if (zf_pop() == 0)
+  {
     trace("ip " ZF_ADDR_FMT "=>" ZF_ADDR_FMT, ip, (zf_addr)d1);
     ip = d1;
   }
   return;
 
 LABEL_TICK:
-  if (!input) {
+  if (!input)
+  {
     input_state = ZF_INPUT_PASS_WORD;
     return;
   }
@@ -719,13 +791,15 @@ LABEL_COMMA:
   return;
 
 LABEL_COMMENT:
-  if (!input || input[0] != ')') {
+  if (!input || input[0] != ')')
+  {
     input_state = ZF_INPUT_PASS_CHAR;
   }
   return;
 
 LABEL_COMMENT2:
-  if (!input || input[0] != '\n') {
+  if (!input || input[0] != '\n')
+  {
     input_state = ZF_INPUT_PASS_CHAR;
   }
   return;
@@ -743,9 +817,12 @@ LABEL_EQUAL:
   return;
 
 LABEL_KEY:
-  if (input == NULL) {
+  if (input == NULL)
+  {
     input_state = ZF_INPUT_PASS_CHAR;
-  } else {
+  }
+  else
+  {
     zf_push(input[0]);
   }
   return;
@@ -761,8 +838,10 @@ LABEL_AND:
   return;
 
 LABEL_STR:
-  if (input == NULL) {
-    if (COMPILING) {
+  if (input == NULL)
+  {
+    if (COMPILING)
+    {
       dict_add_op(PRIM_LITS);
       dict_add_cell(0);
     }
@@ -771,11 +850,13 @@ LABEL_STR:
     return;
   }
 
-  if (input[0] == '"' && dict[HERE - 1] != '\\') {
+  if (input[0] == '"' && dict[HERE - 1] != '\\')
+  {
     dict[HERE++] = 0;
     addr = zf_pick(0);
     len = HERE - addr;
-    if (COMPILING) {
+    if (COMPILING)
+    {
       zf_pop();
       dict_put_cell_typed(HERE - len - 1, len, ZF_MEM_SIZE_VAR);
     }
@@ -797,14 +878,16 @@ LABEL_EXECUTE:
  * deferred primitive if it requested a word from the input stream.
  */
 
-static void handle_word(const char *buf) {
+static void handle_word(const char *buf)
+{
   zf_addr w, code = 0;
   int found;
 
   /* If a word was requested by an earlier operation, resume with the new
    * word */
 
-  if (input_state == ZF_INPUT_PASS_WORD) {
+  if (input_state == ZF_INPUT_PASS_WORD)
+  {
     input_state = ZF_INPUT_INTERPRET;
     run(buf);
     return;
@@ -814,7 +897,8 @@ static void handle_word(const char *buf) {
 
   found = find_word(buf, &w, &code);
 
-  if (found) {
+  if (found)
+  {
 
     /* Word found: compile or execute, depending on flags and state */
 
@@ -823,27 +907,38 @@ static void handle_word(const char *buf) {
     dict_get_cell(w, &d);
     flags = d;
 
-    if (COMPILING && (POSTPONE || !(flags & ZF_FLAG_IMMEDIATE))) {
-      if (flags & ZF_FLAG_PRIM) {
+    if (COMPILING && (POSTPONE || !(flags & ZF_FLAG_IMMEDIATE)))
+    {
+      if (flags & ZF_FLAG_PRIM)
+      {
         dict_get_cell(code, &d);
         dict_add_op(d);
-      } else {
+      }
+      else
+      {
         dict_add_op(code);
       }
       POSTPONE = 0;
-    } else {
+    }
+    else
+    {
       execute(code);
     }
-  } else {
+  }
+  else
+  {
 
     /* Word not found: try to convert to a number and compile or push, depending
      * on state */
 
     zf_cell v = zf_host_parse_num(buf);
 
-    if (COMPILING) {
+    if (COMPILING)
+    {
       dict_add_lit(v);
-    } else {
+    }
+    else
+    {
       zf_push(v);
     }
   }
@@ -854,23 +949,31 @@ static void handle_word(const char *buf) {
  * char to a deferred prim if it requested a character from the input stream
  */
 
-static void handle_char(char c) {
+static void handle_char(char c)
+{
   static char buf[32];
   static size_t len = 0;
 
-  if (input_state == ZF_INPUT_PASS_CHAR) {
+  if (input_state == ZF_INPUT_PASS_CHAR)
+  {
 
     input_state = ZF_INPUT_INTERPRET;
     run(&c);
-  } else if (c != '\0' && !isspace(c)) {
+  }
+  else if (c != '\0' && !isspace(c))
+  {
 
-    if (len < sizeof(buf) - 1) {
+    if (len < sizeof(buf) - 1)
+    {
       buf[len++] = c;
       buf[len] = '\0';
     }
-  } else {
+  }
+  else
+  {
 
-    if (len > 0) {
+    if (len > 0)
+    {
       len = 0;
       handle_word(buf);
     }
@@ -881,7 +984,8 @@ static void handle_char(char c) {
  * Initialisation
  */
 
-void zf_init(int enable_trace) {
+void zf_init(int enable_trace)
+{
   dict = malloc(ZF_DICT_SIZE);
   uservar = (zf_addr *)dict;
   HERE = USERVAR_COUNT * sizeof(zf_addr);
@@ -900,7 +1004,8 @@ void zf_init(int enable_trace) {
  * the user variables.
  */
 
-static void add_prim(const char *name, zf_prim op) {
+static void add_prim(const char *name, zf_prim op)
+{
   int imm = 0;
 
   if (name[0] == '_') // Immediate mode
@@ -916,48 +1021,60 @@ static void add_prim(const char *name, zf_prim op) {
     make_immediate();
 }
 
-static void add_uservar(const char *name, zf_addr addr) {
+static void add_uservar(const char *name, zf_addr addr)
+{
   create(name, 0);
   dict_add_lit(addr);
   dict_add_op(PRIM_EXIT);
 }
 
-void zf_bootstrap(void) {
+void zf_bootstrap(void)
+{
 
   /* Add primitives and user variables to dictionary */
 
   zf_addr i = 0;
   const char *p;
-  for (p = prim_names; *p; p += strlen(p) + 1) {
+  for (p = prim_names; *p; p += strlen(p) + 1)
+  {
     add_prim(p, (zf_prim)i++);
   }
 
   i = 0;
-  for (p = uservar_names; *p; p += strlen(p) + 1) {
+  for (p = uservar_names; *p; p += strlen(p) + 1)
+  {
     add_uservar(p, i++);
   }
 }
 
 #else
-void zf_bootstrap(void) {}
+void zf_bootstrap(void)
+{
+}
 #endif
 
 /*
  * Eval forth string
  */
 
-zf_result zf_eval(const char *buf) {
+zf_result zf_eval(const char *buf)
+{
   zf_result r = (zf_result)setjmp(jmpbuf);
 
-  if (r == ZF_OK) {
-    for (;;) {
+  if (r == ZF_OK)
+  {
+    for (;;)
+    {
       handle_char(*buf);
-      if (*buf == '\0') {
+      if (*buf == '\0')
+      {
         return ZF_OK;
       }
       buf++;
     }
-  } else {
+  }
+  else
+  {
     COMPILING = 0;
     rsp = 0;
     dsp = 0;
@@ -965,7 +1082,8 @@ zf_result zf_eval(const char *buf) {
   }
 }
 
-void *zf_dump(size_t *len) {
+void *zf_dump(size_t *len)
+{
   if (len)
     *len = sizeof(dict);
   return dict;
