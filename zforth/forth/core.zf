@@ -49,7 +49,6 @@
 
 : cells 8 ;
 : allot  h +!  ;
-: var : postpone [ ['] lit , here dup 5 + , ['] exit , here swap ! 5 allot ;
 : variable create 0 , ;
 
 
@@ -79,10 +78,18 @@
 : loop ['] lit , 1 , postpone loop+ ;  immediate
 
 
-( String )
+( methods for handling the dictionary )
 
-: bounds over + 1 - swap ;
-\ : type bounds do i @ emit loop ; 
+( 'next' increases the given dictionary address by the size of the cell
+  located at that address )
+
+: next dup # + ;
+
+( 'words' generates a list of all define words )
+
+: name dup @ 31 & swap next dup next rot tell @ ;
+: words latest @ begin name 32 emit dup 0 = until cr drop ;
+
 
 
 s" Welcome to zForth, " type here . s" bytes used" type cr ;
