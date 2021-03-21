@@ -45,7 +45,9 @@
 : cr   10 emit ;
 : ..   dup . ;
 : here h @ ;
-: temp tmp @ ;
+: dstack 'dstack @ ;
+: rstack 'rstack @ ;
+: pad 'pad @ ;
 
 
 ( memory management )

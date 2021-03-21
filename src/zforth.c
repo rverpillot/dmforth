@@ -110,13 +110,14 @@ static jmp_buf jmpbuf;
 #define LATEST uservar[1]    /* pointer to last compiled word */
 #define TRACE uservar[2]     /* trace enable flag */
 #define COMPILING uservar[3] /* compiling flag */
-#define POSTPONE \
-  uservar[4] /* flag to indicate next imm word should be compiled */
-#define TMP uservar[5]
-#define USERVAR_COUNT 6
+#define POSTPONE uservar[4]  /* flag to indicate next imm word should be compiled */
+#define DSTACK uservar[5]
+#define RSTACK uservar[6]
+#define PAD uservar[7]
+#define USERVAR_COUNT 8
 
 static const char uservar_names[] =
-    _("h") _("latest") _("trace") _("compiling") _("_postpone") _("tmp");
+    _("h") _("latest") _("trace") _("compiling") _("_postpone") _("'dstack") _("'rstack") _("'pad");
 
 static zf_addr *uservar;
 
@@ -992,7 +993,9 @@ void zf_init(int enable_trace)
   HERE = USERVAR_COUNT * sizeof(zf_addr);
   TRACE = enable_trace;
   LATEST = 0;
-  TMP = ZF_TMP_ADDR;
+  PAD = ZF_DICT_SIZE + ZF_STACK_SIZE;
+  DSTACK = ZF_DICT_SIZE;
+  RSTACK = PAD - sizeof(zf_cell);
   dsp = 0;
   rsp = 0;
   COMPILING = 0;
