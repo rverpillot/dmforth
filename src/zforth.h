@@ -30,7 +30,6 @@ typedef enum
   ZF_MEM_SIZE_S8,
   ZF_MEM_SIZE_S16,
   ZF_MEM_SIZE_S32,
-  ZF_MEM_SIZE_F64,
 } zf_mem_size;
 
 typedef enum
