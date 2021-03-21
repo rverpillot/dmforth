@@ -956,13 +956,15 @@ static void handle_char(char c)
 
   if (input_state == ZF_INPUT_PASS_CHAR)
   {
-
     input_state = ZF_INPUT_INTERPRET;
     run(&c);
   }
+  else if (c == '"' && len == 0) // To use conventional string syntax
+  {
+    handle_word("s\"");
+  }
   else if (c != '\0' && !isspace(c))
   {
-
     if (len < sizeof(buf) - 1)
     {
       buf[len++] = c;
@@ -971,7 +973,6 @@ static void handle_char(char c)
   }
   else
   {
-
     if (len > 0)
     {
       len = 0;

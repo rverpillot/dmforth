@@ -82,24 +82,25 @@
 
 ( string )
 
-: strlen dup 1- begin 1+ dup @ =0 until swap - ;
-: count dup strlen ;
+: ." postpone s" puts ;
+: str.len dup 1- begin 1+ dup @ =0 until swap - ;
+: count dup str.len ;
 
 ( methods for handling the dictionary )
 
-( 'next' increases the given dictionary address by the size of the cell
+( 'dic.next' increases the given dictionary address by the size of the cell
   located at that address )
 
-: next/cell dup # + ;
+: dic.next dup # + ;
 
 ( 'words' generates a list of all define words )
 
-: name dup @ 31 & swap next/cell dup next/cell rot type @ ;
+: name dup @ 31 & swap dic.next dup dic.next rot type @ ;
 : words latest @ begin name 32 emit dup 0 = until cr drop ;
 
 
 
-s" Welcome to zForth, " puts here . s" bytes used" puts cr ;
+." Welcome to zForth, " here . ." bytes used" cr ;
 
 
 
