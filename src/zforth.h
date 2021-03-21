@@ -5,7 +5,8 @@
 
 /* Abort reasons */
 
-typedef enum {
+typedef enum
+{
   ZF_OK,
   ZF_ABORT_INTERNAL_ERROR,
   ZF_ABORT_OUTSIDE_MEM,
@@ -19,7 +20,8 @@ typedef enum {
   ZF_ABORT_DIVISION_BY_ZERO
 } zf_result;
 
-typedef enum {
+typedef enum
+{
   ZF_MEM_SIZE_VAR,
   ZF_MEM_SIZE_CELL,
   ZF_MEM_SIZE_U8,
@@ -27,16 +29,19 @@ typedef enum {
   ZF_MEM_SIZE_U32,
   ZF_MEM_SIZE_S8,
   ZF_MEM_SIZE_S16,
-  ZF_MEM_SIZE_S32
+  ZF_MEM_SIZE_S32,
+  ZF_MEM_SIZE_F64,
 } zf_mem_size;
 
-typedef enum {
+typedef enum
+{
   ZF_INPUT_INTERPRET,
   ZF_INPUT_PASS_CHAR,
   ZF_INPUT_PASS_WORD
 } zf_input_state;
 
-typedef enum {
+typedef enum
+{
   ZF_SYSCALL_EMIT,
   ZF_SYSCALL_PRINT,
   ZF_SYSCALL_TYPE,
@@ -56,7 +61,7 @@ void zf_push(zf_cell v);
 zf_cell zf_pop(void);
 const char *zf_pop_string();
 zf_cell zf_pick(zf_addr n);
-unsigned int zf_stack_count();
+unsigned int zf_dstack_count();
 void zf_dstack_show();
 
 /* Host provides these functions */

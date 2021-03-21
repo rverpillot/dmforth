@@ -58,7 +58,7 @@ void lcd_display()
     lcd_clear_buf();
 
     t20->newln = 0;
-    lcd_printRAt(t20, 0, "DMFORTH            Stack: %d", zf_stack_count());
+    lcd_printRAt(t20, 0, "DMFORTH            Stack: %d", zf_dstack_count());
 
     if (shift)
         disp_annun(330, "[SHIFT]");
@@ -75,7 +75,7 @@ void lcd_display()
     fReg->newln = 0;
     const int cpl = (LCD_X - fReg->xoffs) / lcd_fontWidth(fReg); // Chars per line
 
-    for (int i = 0; i < zf_stack_count() && i < 5; i++)
+    for (int i = 0; i < zf_dstack_count() && i < 5; i++)
     {
         char cell[32];
         zf_cell val = zf_pick(i);

@@ -48,8 +48,6 @@ typedef unsigned int zf_addr;
 #define ZF_STACK_SIZE 16 * 1024
 #define ZF_PAD_SIZE 16 * 1024
 #define ZF_MEM_SIZE (ZF_DICT_SIZE + ZF_STACK_SIZE + ZF_PAD_SIZE)
-#define ZF_DSTACK_SIZE 128
-#define ZF_RSTACK_SIZE 128
 
 // Addr to store temporary object
 #define ZF_TMP_ADDR 32 * 1024

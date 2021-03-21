@@ -86,8 +86,6 @@ static const char prim_names[] = _("exit") _("create") _("lit") _("<0") _(":")
 
 /* Stacks and dictionary memory */
 
-static zf_cell rstack[ZF_RSTACK_SIZE];
-static zf_cell dstack[ZF_DSTACK_SIZE];
 static uint8_t *dict;
 
 /* State and stack and interpreter pointers */
@@ -193,18 +191,23 @@ void zf_abort(zf_result reason) { longjmp(jmpbuf, reason); }
  * Stack operations.
  */
 
+static zf_addr dict_get_cell_typed(zf_addr addr, zf_cell *v, zf_mem_size size);
+static zf_addr dict_put_cell_typed(zf_addr addr, zf_cell v, zf_mem_size size);
+
 void zf_push(zf_cell v)
 {
-  CHECK(dsp < ZF_DSTACK_SIZE, ZF_ABORT_DSTACK_OVERRUN);
+  CHECK(dsp < rsp, ZF_ABORT_DSTACK_OVERRUN);
   trace("»" ZF_CELL_FMT " ", v);
-  dstack[dsp++] = v;
+  dict_put_cell_typed(dsp, v, ZF_MEM_SIZE_CELL);
+  dsp += sizeof(zf_cell);
 }
 
 zf_cell zf_pop(void)
 {
   zf_cell v;
-  CHECK(dsp > 0, ZF_ABORT_DSTACK_UNDERRUN);
-  v = dstack[--dsp];
+  CHECK(dsp > DSTACK, ZF_ABORT_DSTACK_UNDERRUN);
+  dsp -= sizeof(zf_cell);
+  dict_get_cell_typed(dsp, &v, ZF_MEM_SIZE_CELL);
   trace("«" ZF_CELL_FMT " ", v);
   return v;
 }
@@ -217,43 +220,54 @@ const char *zf_pop_string()
 
 zf_cell zf_pick(zf_addr n)
 {
-  CHECK(n < dsp, ZF_ABORT_DSTACK_UNDERRUN);
-  return dstack[dsp - n - 1];
+  zf_cell v;
+  zf_addr addr = dsp - (n + 1) * sizeof(zf_cell);
+  CHECK(addr >= DSTACK, ZF_ABORT_DSTACK_UNDERRUN);
+  dict_get_cell_typed(addr, &v, ZF_MEM_SIZE_CELL);
+  return v;
 }
 
-unsigned int zf_stack_count() { return dsp; }
+unsigned int zf_dstack_count() { return (dsp - DSTACK) / sizeof(zf_cell); }
+
+void zf_dstack_show()
+{
+  int count = zf_dstack_count();
+  printf("<%d>", count);
+  for (int i = count - 1; i >= 0; i--)
+  {
+    printf(" " ZF_CELL_FMT, zf_pick(i));
+  }
+  printf("\n");
+}
 
 static void zf_pushr(zf_cell v)
 {
-  CHECK(rsp < ZF_RSTACK_SIZE, ZF_ABORT_RSTACK_OVERRUN);
+  CHECK(rsp > dsp, ZF_ABORT_RSTACK_OVERRUN);
   trace("r»" ZF_CELL_FMT " ", v);
-  rstack[rsp++] = v;
+  dict_put_cell_typed(rsp, v, ZF_MEM_SIZE_CELL);
+  rsp -= sizeof(zf_cell);
 }
 
 static zf_cell zf_popr(void)
 {
   zf_cell v;
-  CHECK(rsp > 0, ZF_ABORT_RSTACK_UNDERRUN);
-  v = rstack[--rsp];
+  CHECK(rsp < RSTACK, ZF_ABORT_RSTACK_UNDERRUN);
+  rsp += sizeof(zf_cell);
+  dict_get_cell_typed(rsp, &v, ZF_MEM_SIZE_CELL);
   trace("r«" ZF_CELL_FMT " ", v);
   return v;
 }
 
 zf_cell zf_pickr(zf_addr n)
 {
-  CHECK(n < rsp, ZF_ABORT_RSTACK_UNDERRUN);
-  return rstack[rsp - n - 1];
+  zf_cell v;
+  zf_addr addr = rsp + (n + 1) * sizeof(zf_cell);
+  CHECK(addr >= RSTACK, ZF_ABORT_RSTACK_UNDERRUN);
+  dict_get_cell_typed(addr, &v, ZF_MEM_SIZE_CELL);
+  return v;
 }
 
-void zf_dstack_show()
-{
-  printf("<%d>", dsp);
-  for (int i = 0; i < (int)dsp; i++)
-  {
-    printf(" " ZF_CELL_FMT, dstack[i]);
-  }
-  printf("\n");
-}
+unsigned int zf_rstack_count() { return (RSTACK - rsp) / sizeof(zf_cell); }
 
 /*
  * All access to dictionary memory is done through these functions.
@@ -514,7 +528,7 @@ static void run(const char *input)
     zf_addr code = d;
 
     trace("\n " ZF_ADDR_FMT " " ZF_ADDR_FMT " ", ip, code);
-    for (i = 0; i < rsp; i++)
+    for (i = 0; i < zf_rstack_count(); i++)
       trace("┊  ");
 
     ip += l;
@@ -550,7 +564,7 @@ static void run(const char *input)
 static void execute(zf_addr addr)
 {
   ip = addr;
-  rsp = 0;
+  rsp = RSTACK;
   zf_pushr(0);
 
   trace("\n[%s/" ZF_ADDR_FMT "] ", op_name(ip), ip);
@@ -996,8 +1010,8 @@ void zf_init(int enable_trace)
   PAD = ZF_DICT_SIZE + ZF_STACK_SIZE;
   DSTACK = ZF_DICT_SIZE;
   RSTACK = PAD - sizeof(zf_cell);
-  dsp = 0;
-  rsp = 0;
+  dsp = DSTACK;
+  rsp = RSTACK;
   COMPILING = 0;
 }
 
@@ -1080,8 +1094,8 @@ zf_result zf_eval(const char *buf)
   else
   {
     COMPILING = 0;
-    rsp = 0;
-    dsp = 0;
+    rsp = RSTACK;
+    dsp = DSTACK;
     return r;
   }
 }
