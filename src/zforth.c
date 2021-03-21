@@ -262,7 +262,7 @@ static zf_addr dict_put_bytes(zf_addr addr, const void *buf, size_t len)
 {
   const uint8_t *p = (const uint8_t *)buf;
   size_t i = len;
-  CHECK(addr < ZF_DICT_SIZE - len, ZF_ABORT_OUTSIDE_MEM);
+  CHECK(addr < ZF_MEM_SIZE - len, ZF_ABORT_OUTSIDE_MEM);
   while (i--)
     dict[addr++] = *p++;
   return len;
@@ -271,7 +271,7 @@ static zf_addr dict_put_bytes(zf_addr addr, const void *buf, size_t len)
 static void dict_get_bytes(zf_addr addr, void *buf, size_t len)
 {
   uint8_t *p = (uint8_t *)buf;
-  CHECK(addr < ZF_DICT_SIZE - len, ZF_ABORT_OUTSIDE_MEM);
+  CHECK(addr < ZF_MEM_SIZE - len, ZF_ABORT_OUTSIDE_MEM);
   while (len--)
     *p++ = dict[addr++];
 }
@@ -987,7 +987,7 @@ static void handle_char(char c)
 
 void zf_init(int enable_trace)
 {
-  dict = malloc(ZF_DICT_SIZE);
+  dict = malloc(ZF_MEM_SIZE);
   uservar = (zf_addr *)dict;
   HERE = USERVAR_COUNT * sizeof(zf_addr);
   TRACE = enable_trace;

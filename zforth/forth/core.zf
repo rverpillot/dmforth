@@ -95,9 +95,8 @@
 
 ( 'words' generates a list of all define words )
 
-: name dup @ 31 & swap dic.next dup dic.next rot type @ ;
-: words latest @ begin name 32 emit dup 0 = until cr drop ;
-
+: words.name dup @ 31 & swap dic.next dup dic.next rot type @ ;
+: words latest @ begin words.name 32 emit dup 0 = until cr drop ;
 
 
 ." Welcome to zForth, " here . ." bytes used" cr ;
