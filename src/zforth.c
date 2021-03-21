@@ -262,7 +262,7 @@ zf_cell zf_pickr(zf_addr n)
 {
   zf_cell v;
   zf_addr addr = rsp + (n + 1) * sizeof(zf_cell);
-  CHECK(addr >= RSTACK, ZF_ABORT_RSTACK_UNDERRUN);
+  CHECK(addr <= RSTACK, ZF_ABORT_RSTACK_UNDERRUN);
   dict_get_cell_typed(addr, &v, ZF_MEM_SIZE_CELL);
   return v;
 }
@@ -942,7 +942,6 @@ static void handle_word(const char *buf)
   }
   else
   {
-
     /* Word not found: try to convert to a number and compile or push, depending
      * on state */
 

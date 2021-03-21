@@ -84,7 +84,7 @@
 
 ( string )
 
-: ." postpone s" puts ;
+: ." postpone s" compiling @ if ['] puts , else puts fi ; immediate
 : str.len dup 1- begin 1+ dup @ =0 until swap - ;
 : count dup str.len ;
 

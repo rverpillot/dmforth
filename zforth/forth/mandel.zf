@@ -2,7 +2,7 @@
 ( calculate and draw mandelbrot fracal )
 
 : chars    s" .--=o+*#% " ;
-: output   5 / chars drop + @ emit ;
+: output   5 / chars + @ emit ;
 
 ( Ar Ai Br Bi -- Cr Ci : Add two complex numbers )
 
