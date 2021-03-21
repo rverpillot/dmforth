@@ -8,6 +8,8 @@
 
 #include "zforth.h"
 
+#define ZF_MEMORY_SIZE (ZF_DICT_SIZE + ZF_STACK_SIZE + ZF_PAD_SIZE)
+
 /* Flags and length encoded in words */
 
 #define ZF_FLAG_IMMEDIATE (1 << 6)
@@ -86,7 +88,7 @@ static const char prim_names[] = _("exit") _("create") _("lit") _("<0") _(":")
 
 /* Stacks and dictionary memory */
 
-static uint8_t *dict;
+static uint8_t *mem;
 
 /* State and stack and interpreter pointers */
 
@@ -109,9 +111,9 @@ static jmp_buf jmpbuf;
 #define TRACE uservar[2]     /* trace enable flag */
 #define COMPILING uservar[3] /* compiling flag */
 #define POSTPONE uservar[4]  /* flag to indicate next imm word should be compiled */
-#define DSTACK uservar[5]
-#define RSTACK uservar[6]
-#define PAD uservar[7]
+#define DSTACK uservar[5]    /* dstack pointer */
+#define RSTACK uservar[6]    /* rstack pointer */
+#define PAD uservar[7]       /* PAD pointer */
 #define USERVAR_COUNT 8
 
 static const char uservar_names[] =
@@ -215,7 +217,7 @@ zf_cell zf_pop(void)
 const char *zf_pop_string()
 {
   zf_addr addr = zf_pop();
-  return (const char *)&dict[addr];
+  return (const char *)&mem[addr];
 }
 
 zf_cell zf_pick(zf_addr n)
@@ -232,12 +234,12 @@ unsigned int zf_dstack_count() { return (dsp - DSTACK) / sizeof(zf_cell); }
 void zf_dstack_show()
 {
   int count = zf_dstack_count();
-  printf("<%d>", count);
+  zf_host_printf("<%d>", count);
   for (int i = count - 1; i >= 0; i--)
   {
-    printf(" " ZF_CELL_FMT, zf_pick(i));
+    zf_host_printf(" " ZF_CELL_FMT, zf_pick(i));
   }
-  printf("\n");
+  zf_host_printf("\n");
 }
 
 static void zf_pushr(zf_cell v)
@@ -277,18 +279,18 @@ static zf_addr dict_put_bytes(zf_addr addr, const void *buf, size_t len)
 {
   const uint8_t *p = (const uint8_t *)buf;
   size_t i = len;
-  CHECK(addr < ZF_MEM_SIZE - len, ZF_ABORT_OUTSIDE_MEM);
+  CHECK(addr <= ZF_MEMORY_SIZE - len, ZF_ABORT_OUTSIDE_MEM);
   while (i--)
-    dict[addr++] = *p++;
+    mem[addr++] = *p++;
   return len;
 }
 
 static void dict_get_bytes(zf_addr addr, void *buf, size_t len)
 {
   uint8_t *p = (uint8_t *)buf;
-  CHECK(addr < ZF_MEM_SIZE - len, ZF_ABORT_OUTSIDE_MEM);
+  CHECK(addr <= ZF_MEMORY_SIZE - len, ZF_ABORT_OUTSIDE_MEM);
   while (len--)
-    *p++ = dict[addr++];
+    *p++ = mem[addr++];
 }
 
 /*
@@ -460,6 +462,10 @@ static void dict_add_str(const char *s)
 
 static void create(const char *name, int flags)
 {
+  if (HERE >= ZF_DICT_SIZE)
+  {
+    zf_abort(ZF_ABORT_OUTSIDE_DICT);
+  }
   zf_addr here_prev;
   trace("\n=== create '%s'", name);
   here_prev = HERE;
@@ -489,7 +495,7 @@ static int find_word(const char *name, zf_addr *word, zf_addr *code)
     len = ZF_FLAG_LEN((int)d);
     if (len == namelen)
     {
-      const char *name2 = (const char *)&dict[p];
+      const char *name2 = (const char *)&mem[p];
       if (memcmp(name, name2, len) == 0)
       {
         *word = w;
@@ -865,9 +871,9 @@ LABEL_STR:
     return;
   }
 
-  if (input[0] == '"' && dict[HERE - 1] != '\\')
+  if (input[0] == '"' && mem[HERE - 1] != '\\')
   {
-    dict[HERE++] = 0;
+    mem[HERE++] = 0;
     addr = zf_pick(0);
     len = HERE - addr;
     if (COMPILING)
@@ -879,7 +885,7 @@ LABEL_STR:
   }
 
   input_state = ZF_INPUT_PASS_CHAR;
-  dict[HERE++] = input[0];
+  mem[HERE++] = input[0];
   return;
 
 LABEL_EXECUTE:
@@ -1001,14 +1007,14 @@ static void handle_char(char c)
 
 void zf_init(int enable_trace)
 {
-  dict = malloc(ZF_MEM_SIZE);
-  uservar = (zf_addr *)dict;
+  mem = malloc(ZF_MEMORY_SIZE);
+  uservar = (zf_addr *)mem;
   HERE = USERVAR_COUNT * sizeof(zf_addr);
   TRACE = enable_trace;
   LATEST = 0;
-  PAD = ZF_DICT_SIZE + ZF_STACK_SIZE;
-  DSTACK = ZF_DICT_SIZE;
-  RSTACK = PAD - sizeof(zf_cell);
+  PAD = ZF_DICT_SIZE;
+  DSTACK = ZF_MEMORY_SIZE - ZF_STACK_SIZE;
+  RSTACK = ZF_MEMORY_SIZE - sizeof(zf_cell);
   dsp = DSTACK;
   rsp = RSTACK;
   COMPILING = 0;
@@ -1102,8 +1108,8 @@ zf_result zf_eval(const char *buf)
 void *zf_dump(size_t *len)
 {
   if (len)
-    *len = sizeof(dict);
-  return dict;
+    *len = sizeof(mem);
+  return mem;
 }
 
 /*

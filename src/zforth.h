@@ -12,6 +12,7 @@ typedef enum
   ZF_OK,
   ZF_ABORT_INTERNAL_ERROR,
   ZF_ABORT_OUTSIDE_MEM,
+  ZF_ABORT_OUTSIDE_DICT,
   ZF_ABORT_DSTACK_UNDERRUN,
   ZF_ABORT_DSTACK_OVERRUN,
   ZF_ABORT_RSTACK_UNDERRUN,
@@ -70,5 +71,6 @@ void zf_dstack_show();
 zf_input_state zf_host_sys(zf_syscall_id id, const char *last_word);
 void zf_host_trace(const char *fmt, va_list va);
 zf_cell zf_host_parse_num(const char *buf);
+void zf_host_printf(const char *fmt, ...);
 
 #endif

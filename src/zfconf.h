@@ -47,6 +47,5 @@ typedef unsigned int zf_addr;
 #define ZF_DICT_SIZE 32 * 1024
 #define ZF_STACK_SIZE 16 * 1024
 #define ZF_PAD_SIZE 16 * 1024
-#define ZF_MEM_SIZE (ZF_DICT_SIZE + ZF_STACK_SIZE + ZF_PAD_SIZE)
 
 #endif

@@ -33,6 +33,9 @@ zf_result do_eval(const char *src, int line, const char *buf)
   case ZF_ABORT_INTERNAL_ERROR:
     msg = "internal error";
     break;
+  case ZF_ABORT_OUTSIDE_DICT:
+    msg = "outside dict memory";
+    break;
   case ZF_ABORT_OUTSIDE_MEM:
     msg = "outside memory";
     break;
@@ -274,6 +277,14 @@ zf_cell zf_host_parse_num(const char *buf)
     zf_abort(ZF_ABORT_NOT_A_WORD);
   }
   return v;
+}
+
+void zf_host_printf(const char *fmt, ...)
+{
+  va_list params;
+  va_start(params, fmt);
+  vprintf(fmt, params);
+  va_end(params);
 }
 
 void usage(void)
