@@ -78,6 +78,7 @@ typedef enum
   PRIM_AND,
   PRIM_STR,
   PRIM_EXECUTE,
+  PRIM_CMOVE,
 
   PRIM_COUNT
 } zf_prim;
@@ -87,7 +88,7 @@ static const char prim_names[] = _("exit") _("create") _("lit") _("<0") _(":")
         _("_immediate") _("@@") _("!!") _("swap") _("rot") _("jmp") _("jmp0")
             _("'") _("[']") _("_(") _("_\\") _(">r") _("r>") _("=") _("sys")
                 _("pick") _(",,") _("key") _("lits") _("##") _("&") _("_s\"")
-                    _("execute");
+                    _("execute") _("cmove");
 
 /* Stacks and dictionary memory */
 
@@ -180,7 +181,8 @@ static const char *op_name(zf_addr addr)
 static void trace(const char *fmt, ...)
 {
 }
-static const char *op_name(zf_addr addr) { return NULL; }
+static const char *op_name(zf_addr addr) {
+  return NULL; }
 #endif
 
 /*
@@ -188,7 +190,8 @@ static const char *op_name(zf_addr addr) { return NULL; }
  * zf_eval()
  */
 
-void zf_abort(zf_result reason) { longjmp(jmpbuf, reason); }
+void zf_abort(zf_result reason) {
+  longjmp(jmpbuf, reason); }
 
 /*
  * Stack operations.
@@ -230,7 +233,8 @@ zf_cell zf_pick(zf_addr n)
   return v;
 }
 
-unsigned int zf_dstack_count() { return (DSTACK - ZF_DSTACK) / sizeof(zf_cell); }
+unsigned int zf_dstack_count() {
+  return (DSTACK - ZF_DSTACK) / sizeof(zf_cell); }
 
 static void zf_pushr(zf_cell v)
 {
@@ -259,7 +263,8 @@ zf_cell zf_pickr(zf_addr n)
   return v;
 }
 
-unsigned int zf_rstack_count() { return (ZF_RSTACK - RSTACK) / sizeof(zf_cell); }
+unsigned int zf_rstack_count() {
+  return (ZF_RSTACK - RSTACK) / sizeof(zf_cell); }
 
 /*
  * All access to dictionary memory is done through these functions.
@@ -601,7 +606,7 @@ static void do_prim(zf_prim op, const char *input)
       &&LABEL_COMMENT2, &&LABEL_PUSHR, &&LABEL_POPR, &&LABEL_EQUAL,
       &&LABEL_SYS, &&LABEL_PICK, &&LABEL_COMMA, &&LABEL_KEY,
       &&LABEL_LITS, &&LABEL_LEN, &&LABEL_AND, &&LABEL_STR,
-      &&LABEL_EXECUTE};
+      &&LABEL_EXECUTE, &&LABEL_CMOVE};
 
   if (op >= PRIM_COUNT)
   {
@@ -898,7 +903,16 @@ LABEL_STR:
     mem[PAD++] = input[0];
   }
   input_state = ZF_INPUT_PASS_CHAR;
+  return;
 
+LABEL_CMOVE:
+{
+  size_t len = zf_pop();
+  zf_addr dst = zf_pop();
+  zf_addr src = zf_pop();
+  memcpy(&mem[dst], &mem[src], len);
+  // mem[dst + len] = 0;
+}
   return;
 
 LABEL_EXECUTE:
@@ -1064,7 +1078,6 @@ static void add_uservar(const char *name, zf_addr addr)
 
 void zf_bootstrap(void)
 {
-
   /* Add primitives and user variables to dictionary */
 
   zf_addr i = 0;
