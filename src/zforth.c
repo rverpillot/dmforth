@@ -910,7 +910,7 @@ LABEL_CMOVE:
   size_t len = zf_pop();
   zf_addr dst = zf_pop();
   zf_addr src = zf_pop();
-  memcpy(&mem[dst], &mem[src], len);
+  memmove(&mem[dst], &mem[src], len);
   // mem[dst + len] = 0;
 }
   return;
