@@ -579,6 +579,16 @@ void zf_disassemble(const char *name)
         trace(ZF_CELL_FMT " ", value);
         continue;
       }
+      else if (val == PRIM_LITS)
+      {
+        zf_cell value;
+        a += dict_get_cell(a, &value);
+        trace(ZF_CELL_FMT " ", value);
+        for (int i = 0; i < value; i++, a++)
+          trace("<%02x>", mem[a]);
+        trace(" ");
+        continue;
+      }
     }
     else
     {
