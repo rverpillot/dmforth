@@ -6,7 +6,7 @@
 : type    2 sys ;
 : dump    3 sys ;
 : quit    128 sys ;
-: puts    129 sys ;
+: .puts    129 sys ;
 : include 130 sys ;
 : save    131 sys ;
 : .s      132 sys ;
@@ -84,7 +84,7 @@
 
 ( string )
 
-: ." postpone s" compiling @ if ['] puts , else puts fi ; immediate
+: ." postpone s" compiling @ if ['] .puts , else .puts fi ; immediate
 : str.len dup 1- begin 1+ dup @ =0 until swap - ;
 : count dup str.len ;
 

@@ -9,8 +9,9 @@
 #include "zforth.h"
 
 #define ZF_MEMORY_SIZE (ZF_DICT_SIZE + ZF_STACK_SIZE + ZF_PAD_SIZE)
-#define ZF_DSTACK ZF_MEMORY_SIZE - ZF_STACK_SIZE
-#define ZF_RSTACK ZF_MEMORY_SIZE - sizeof(zf_cell)
+#define ZF_DSTACK (ZF_MEMORY_SIZE - ZF_STACK_SIZE)
+#define ZF_RSTACK (ZF_MEMORY_SIZE - sizeof(zf_cell))
+#define ZF_PAD ZF_DICT_SIZE
 
 /* Flags and length encoded in words */
 
@@ -854,8 +855,12 @@ LABEL_STR:
     {
       dict_add_op(PRIM_LITS);
       dict_add_cell(0);
+      zf_push(HERE);
     }
-    zf_push(HERE);
+    else
+    {
+      zf_push(PAD);
+    }
     input_state = ZF_INPUT_PASS_CHAR;
     return;
   }
@@ -873,8 +878,27 @@ LABEL_STR:
     return;
   }
 
+  if (COMPILING)
+  {
+    if (HERE >= ZF_DICT_SIZE)
+      zf_abort(ZF_ABORT_OUTSIDE_DICT);
+    mem[HERE++] = input[0];
+  }
+  else
+  {
+    if (PAD >= (ZF_PAD + ZF_PAD_SIZE - 2))
+    {
+      zf_addr addr = zf_pop();
+      size_t len = PAD - addr;
+      PAD = ZF_PAD;
+      zf_push(PAD);
+      memcpy(&mem[PAD], &mem[addr], len);
+      PAD += len;
+    }
+    mem[PAD++] = input[0];
+  }
   input_state = ZF_INPUT_PASS_CHAR;
-  mem[HERE++] = input[0];
+
   return;
 
 LABEL_EXECUTE:
@@ -1001,7 +1025,7 @@ void zf_init(int enable_trace)
   HERE = USERVAR_COUNT * sizeof(zf_addr);
   TRACE = enable_trace;
   LATEST = 0;
-  PAD = ZF_DICT_SIZE;
+  PAD = ZF_PAD;
   DSTACK = ZF_DSTACK;
   RSTACK = ZF_RSTACK;
   COMPILING = 0;
