@@ -31,9 +31,7 @@
 #define CHECK(exp, abort)
 #endif
 
-/* Define all primitives, make sure the two tables below always match.  The
- * names are defined as a \0 separated list, terminated by double \0. This
- * saves space on the pointers compared to an array of strings. Immediates are
+/* Define all primitives, make sure the two tables below always match. Immediates are
  * prefixed by an underscore, which is later stripped of when putting the name
  * in the dictionary. */
 
@@ -79,20 +77,58 @@ typedef enum
   PRIM_STR,
   PRIM_EXECUTE,
   PRIM_CMOVE,
+  PRIM_CHAR,
+  PRIM_SEE,
 
   PRIM_COUNT
 } zf_prim;
 
-static const char prim_names[] = _("exit") _("create") _("lit") _("<0") _(":")
-    _("_;") _("+") _("-") _("*") _("/") _("%") _("drop") _("dup") _("pickr")
-        _("_immediate") _("@@") _("!!") _("swap") _("rot") _("jmp") _("jmp0")
-            _("'") _("[']") _("_(") _("_\\") _(">r") _("r>") _("=") _("sys")
-                _("pick") _(",,") _("key") _("lits") _("##") _("&") _("_s\"")
-                    _("execute") _("cmove");
+static const char *prim_names[] = {
+    "exit",
+    "create",
+    "lit",
+    "<0",
+    ":",
+    "_;",
+    "+",
+    "-",
+    "*",
+    "/",
+    "%",
+    "drop",
+    "dup",
+    "pickr",
+    "_immediate",
+    "@@",
+    "!!",
+    "swap",
+    "rot",
+    "jmp",
+    "jmp0",
+    "'",
+    "[']",
+    "_(",
+    "_\\",
+    ">r",
+    "r>",
+    "=",
+    "sys",
+    "pick",
+    ",,",
+    "key",
+    "lits",
+    "##",
+    "&",
+    "_s\"",
+    "execute",
+    "cmove",
+    "char",
+    "see"};
 
 /* Stacks and dictionary memory */
 
-static uint8_t *mem;
+static uint8_t *
+    mem;
 
 /* State and stack and interpreter pointers */
 
@@ -181,8 +217,10 @@ static const char *op_name(zf_addr addr)
 static void trace(const char *fmt, ...)
 {
 }
-static const char *op_name(zf_addr addr) {
-  return NULL; }
+static const char *op_name(zf_addr addr)
+{
+  return NULL;
+}
 #endif
 
 /*
@@ -190,8 +228,10 @@ static const char *op_name(zf_addr addr) {
  * zf_eval()
  */
 
-void zf_abort(zf_result reason) {
-  longjmp(jmpbuf, reason); }
+void zf_abort(zf_result reason)
+{
+  longjmp(jmpbuf, reason);
+}
 
 /*
  * Stack operations.
@@ -233,8 +273,10 @@ zf_cell zf_pick(zf_addr n)
   return v;
 }
 
-unsigned int zf_dstack_count() {
-  return (DSTACK - ZF_DSTACK) / sizeof(zf_cell); }
+unsigned int zf_dstack_count()
+{
+  return (DSTACK - ZF_DSTACK) / sizeof(zf_cell);
+}
 
 static void zf_pushr(zf_cell v)
 {
@@ -263,8 +305,10 @@ zf_cell zf_pickr(zf_addr n)
   return v;
 }
 
-unsigned int zf_rstack_count() {
-  return (ZF_RSTACK - RSTACK) / sizeof(zf_cell); }
+unsigned int zf_rstack_count()
+{
+  return (ZF_RSTACK - RSTACK) / sizeof(zf_cell);
+}
 
 /*
  * All access to dictionary memory is done through these functions.
@@ -505,6 +549,49 @@ static int find_word(const char *name, zf_addr *word, zf_addr *code)
 }
 
 /*
+* Dissassemble word
+*/
+
+void zf_disassemble(const char *name)
+{
+  zf_addr addr, code;
+  if (!find_word(name, &addr, &code))
+  {
+    zf_abort(ZF_ABORT_NOT_A_WORD);
+  }
+  int tr = TRACE;
+  TRACE = 1;
+  for (zf_addr a = code;;)
+  {
+    uint8_t val = mem[a];
+    if (val < PRIM_COUNT)
+    {
+      a++;
+      trace("%s ", prim_names[val]);
+      if (val == PRIM_EXIT)
+      {
+        break;
+      }
+      else if (val == PRIM_LIT)
+      {
+        zf_cell value;
+        a += dict_get_cell(a, &value);
+        trace(ZF_CELL_FMT " ", value);
+        continue;
+      }
+    }
+    else
+    {
+      zf_cell value;
+      a += dict_get_cell(a, &value);
+      trace("%s ", op_name(value));
+    }
+  }
+  trace("\n");
+  TRACE = tr;
+}
+
+/*
  * Set 'immediate' flag in last compiled word
  */
 
@@ -606,7 +693,7 @@ static void do_prim(zf_prim op, const char *input)
       &&LABEL_COMMENT2, &&LABEL_PUSHR, &&LABEL_POPR, &&LABEL_EQUAL,
       &&LABEL_SYS, &&LABEL_PICK, &&LABEL_COMMA, &&LABEL_KEY,
       &&LABEL_LITS, &&LABEL_LEN, &&LABEL_AND, &&LABEL_STR,
-      &&LABEL_EXECUTE, &&LABEL_CMOVE};
+      &&LABEL_EXECUTE, &&LABEL_CMOVE, &&LABEL_CHAR, &&LABEL_SEE};
 
   if (op >= PRIM_COUNT)
   {
@@ -919,6 +1006,24 @@ LABEL_EXECUTE:
   addr = zf_pop();
   execute(addr - 1);
   return;
+
+LABEL_CHAR:
+  if (input == NULL)
+  {
+    input_state = ZF_INPUT_PASS_WORD;
+    return;
+  }
+  zf_push(input[0]);
+  return;
+
+LABEL_SEE:
+  if (input == NULL)
+  {
+    input_state = ZF_INPUT_PASS_WORD;
+    return;
+  }
+  zf_disassemble(input);
+  return;
 }
 
 /*
@@ -1080,14 +1185,13 @@ void zf_bootstrap(void)
 {
   /* Add primitives and user variables to dictionary */
 
-  zf_addr i = 0;
-  const char *p;
-  for (p = prim_names; *p; p += strlen(p) + 1)
+  for (int i = 0; i < PRIM_COUNT; i++)
   {
-    add_prim(p, (zf_prim)i++);
+    add_prim(prim_names[i], (zf_prim)i);
   }
 
-  i = 0;
+  zf_addr i = 0;
+  const char *p;
   for (p = uservar_names; *p; p += strlen(p) + 1)
   {
     add_uservar(p, i++);

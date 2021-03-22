@@ -267,7 +267,7 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
 
 void zf_host_trace(const char *fmt, va_list va)
 {
-  fprintf(stderr, "\033[1;30m");
+  fprintf(stderr, "\033[1;36m");
   vfprintf(stderr, fmt, va);
   fprintf(stderr, "\033[0m");
 }
