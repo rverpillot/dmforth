@@ -64,13 +64,11 @@ zf_cell zf_pop(void);
 const char *zf_pop_string();
 zf_cell zf_pick(zf_addr n);
 unsigned int zf_dstack_count();
-void zf_dstack_show();
 
 /* Host provides these functions */
 
 zf_input_state zf_host_sys(zf_syscall_id id, const char *last_word);
 void zf_host_trace(const char *fmt, va_list va);
 zf_cell zf_host_parse_num(const char *buf);
-void zf_host_printf(const char *fmt, ...);
 
 #endif

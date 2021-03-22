@@ -202,8 +202,16 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
     break;
 
   case ZF_SYSCALL_USER + 4:
-    zf_dstack_show();
-    break;
+  {
+    int count = zf_dstack_count();
+    printf("<%d>", count);
+    for (int i = count - 1; i >= 0; i--)
+    {
+      printf(" " ZF_CELL_FMT, zf_pick(i));
+    }
+    printf("\n");
+  }
+  break;
 
   case ZF_SYSCALL_USER + 5:
     zf_push(sizeof(zf_cell));
@@ -289,13 +297,12 @@ void zf_host_printf(const char *fmt, ...)
 
 void usage(void)
 {
-  fprintf(stderr,
-          "usage: zfort [options] [src ...]\n"
-          "\n"
-          "Options:\n"
-          "   -h         show help\n"
-          "   -t         enable tracing\n"
-          "   -l FILE    load dictionary from FILE\n");
+  fprintf(stderr, "usage: zfort [options] [src ...]\n"
+                  "\n"
+                  "Options:\n"
+                  "   -h         show help\n"
+                  "   -t         enable tracing\n"
+                  "   -l FILE    load dictionary from FILE\n");
 }
 
 /*
