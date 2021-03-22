@@ -4,7 +4,6 @@
             "name": "DM42",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/pforth/csrc"
             ],
             "defines": [
                 "PF_STATIC_DIC"

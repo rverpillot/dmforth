@@ -549,7 +549,7 @@ static int find_word(const char *name, zf_addr *word, zf_addr *code)
 }
 
 /*
-* Dissassemble word
+* Disassemble word
 */
 
 void zf_disassemble(const char *name)
@@ -585,8 +585,8 @@ void zf_disassemble(const char *name)
         a += dict_get_cell(a, &value);
         trace(ZF_CELL_FMT " ", value);
         for (int i = 0; i < value; i++, a++)
-          trace("<%02x>", mem[a]);
-        trace(" ");
+          trace("|%02x", mem[a]);
+        trace("| ");
         continue;
       }
     }
