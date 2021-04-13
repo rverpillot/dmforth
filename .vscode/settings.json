@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.zf": "forth",
+        "*.tcc": "c",
+        "limits": "c",
+        "math.h": "c"
+    }
+}

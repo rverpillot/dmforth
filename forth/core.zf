@@ -1,0 +1,114 @@
+
+( system calls )
+
+: emit       0 sys ;
+: .          1 sys ;
+: type       2 sys ;
+: include    128 sys ;
+: accept     129 sys ;
+: .s         130 sys ;
+: bye        131 sys ;
+: save       132 sys ;
+: load       133 sys ;
+: time&date  134 sys ;
+: now        135 sys ;
+: .date      136 sys ;
+: .time      137 sys ;
+
+
+
+( dictionary access. These are shortcuts through the primitive operations are !!, @@ and ,, )
+
+: !    0 !! ;
+: !c   1 !! ; \ cell
+: @    0 @@ ;
+: @c   1 @@ ; \ cell
+: ,    0 ,, ;
+: ,c   1 ,, ; \ cell
+: #    0 ## ;
+: ?  @ . ;
+
+( compiler state )
+
+: [ 0 compiling ! ; immediate
+: ] 1 compiling ! ;
+: postpone 1 _postpone ! ; immediate
+
+
+( some operators and shortcuts )
+
+: over 1 pick ;
+: 2drop drop drop ;
+: nip  swap drop ;
+: 2nip  2swap 2drop ;
+: +!   dup @ rot + swap ! ;
+: 1+   1 + ;
+: 1-   1 - ;
+: inc  1 swap +! ;
+: dec  -1 swap +! ;
+: <    - <0 ;
+: >    swap < ;
+: <=   over over >r >r < r> r> = + ;
+: >=   swap <= ;
+: =0   0 = ;
+: not  =0 ;
+: !=   = not ;
+: cr   10 emit ;
+: sp   32 emit ;
+: ..   dup . ;
+: here h @ ;
+
+
+( memory management )
+
+: allot  h +!  ;
+: variable create 1 cells allot ;
+
+
+( 'begin' gets the current address, a jump or conditional jump back is generated
+  by 'again', 'until' or 'times' )
+
+: begin   here ; immediate
+: again   ['] jmp , , ; immediate
+: until   ['] jmp0 , , ; immediate
+: times ['] 1 - , ['] dup , ['] =0 , postpone until ; immediate
+
+
+( 'if' prepares conditional jump, address will be filled in by 'else' or 'fi' )
+
+: if      ['] jmp0 , here 999 , ; immediate
+: unless  ['] not , postpone if ; immediate
+: else    ['] jmp , here 999 , swap here swap ! ; immediate
+: fi      here swap ! ; immediate
+
+
+( forth style 'do' and 'loop', including loop iterators 'i' and 'j' )
+
+: i ['] lit , 0 , ['] pickr , ; immediate
+: j ['] lit , 2 , ['] pickr , ; immediate
+: do ['] swap , ['] >r , ['] >r , here ; immediate
+: loop+ ['] r> , ['] + , ['] dup , ['] >r , ['] lit , 1 , ['] pickr , ['] > , ['] jmp0 , , ['] r> , ['] drop , ['] r> , ['] drop , ; immediate
+: loop ['] lit , 1 , postpone loop+ ;  immediate
+
+( string )
+
+: [char] ['] lit , postpone char , ; immediate
+: ." postpone s" compiling @ if ['] type , else type fi ; immediate
+: bounds over + ;
+: prompt ( str size -- addr ) alloc accept ;
+
+
+( 100 registers )
+
+variable regs 100 8 * allot
+: rcl dup 99 > if abort fi cells regs + @c ;
+: sto dup 99 > if abort fi cells regs + !c ;
+: sto+ dup rcl rot + swap sto ;
+: sto- dup rcl rot + swap sto ;
+: sto* dup rcl rot * swap sto ;
+: rcl+ rcl + ;
+: rcl- rcl - ;
+: rcl* rcl * ;
+
+
+

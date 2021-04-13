@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "name": "DM42",
+            "includePath": [
+                "${workspaceFolder}/**",
+            ],
+            "defines": [
+                "PF_STATIC_DIC"
+            ],
+            "compilerPath": "arm-none-eabi-gcc"
+        }
+    ],
+    "version": 4
+}

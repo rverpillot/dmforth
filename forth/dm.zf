@@ -1,0 +1,11 @@
+: refresh  200 sys ;
+: cls      201 sys ;
+: alert    202 sys ;
+: message  203 sys ;
+: header   204 sys ;
+: setline  205 sys ;
+: setxy    206 sys ;
+
+
+
+

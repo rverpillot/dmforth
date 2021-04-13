@@ -1,0 +1,21 @@
+( system calls )
+
+: sin     140 sys ;
+: cos     141 sys ;
+: tan     142 sys ;
+: asin    143 sys ;
+: acos    144 sys ;
+: atan    145 sys ;
+: sqrt    146 sys ;
+: pow     147 sys ;
+: ln      148 sys ;
+: log     149 sys ;
+: exp     150 sys ;
+: abs     151 sys ;
+: neg     152 sys ;
+
+
+: pi 3.141592653589793 ;
+
+: % 100 / * ;
+
