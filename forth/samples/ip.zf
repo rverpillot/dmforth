@@ -1,3 +1,5 @@
+( not working yet )
+
 : split .s dup rot swap .s 
     begin over swap search dup =0 if atoi . exit fi .s 2dup atoi . + swap again ;
 
