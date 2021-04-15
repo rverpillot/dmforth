@@ -96,18 +96,42 @@ When a word outputs text to LCD display, DMFORTH erase display and switch to out
 - PAD zone stores temporary strings. When this memory is full, PAD pointer is reset.
 - `s" Hello"` can be written `"Hello"` .
 
-#### Words for LCD display
+### Dictionary
+
+#### Core
 
 Word       | Stack                 | Description
 -----------|-----------------------|---------
-alert      |  addr len --          | Display text in alert box
-cls        |                       | Clear display
-header     |  addr len --          | Display text in 1st row (reverse mode)
-message    |  addr len --          | Display text in last row (reverse mode)
-refresh    |                       | Refresh LCD display
-setline    | lr --                 | Move to `lr` line number
-setxy      | x y                   | Move to pixel at position `x` `y` 
 
+TODO
 
-(To complete)
+#### Date and time
+
+Word       | Stack                                | Description
+-----------|--------------------------------------|---------
+`date&time`| –- nsec nmin nhour nday nmonth nyear | 
+`now`      | -- nsec                              | seconds from 1/1/1970
+`.date`    | nsec --                              | display date
+`.time`    | nsec --                              | display time
+
+#### LCD display
+
+Word       | Stack                 | Description
+-----------|-----------------------|---------
+`alert `   |  addr len --          | Display text in alert box
+`cls`      |                       | Clear display
+`header`   |  addr len --          | Display text in 1st row (reverse mode)
+`message`  |  addr len --          | Display text in last row (reverse mode)
+`refresh`  |                       | Refresh LCD display
+`setline`  | lr --                 | Move cursor to `lr` line number
+`setxy`    | x y --                | Move cursor to position `x` `y` 
+`type`     | addr len --           | Display text at the current cursor position
+`.`        | val --                | Display `val` at the current cursor position
+
+#### Math
+
+Word       | Stack                 | Description
+-----------|-----------------------|---------
+
+TODO
 
