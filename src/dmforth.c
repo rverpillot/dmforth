@@ -209,6 +209,9 @@ int forth_eval(const char *buf)
     case ZF_ABORT_DIVISION_BY_ZERO:
         msg = "Division by zero";
         break;
+    case ZF_ABORT_INTERRUPT:
+        msg = "Interrupt";
+        break;
     default:
         msg = "unknown error";
     }
@@ -296,10 +299,11 @@ int forth_init()
 
 zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
 {
+    if (sys_last_key() == KEY_EXIT)
+        zf_abort(ZF_ABORT_INTERRUPT);
+
     switch ((int)id)
     {
-        /* The core system callbacks */
-
     case ZF_SYSCALL_EMIT:
     {
         write_char(fReg, (char)zf_pop());

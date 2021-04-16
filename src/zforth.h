@@ -22,6 +22,7 @@ typedef enum
   ZF_ABORT_COMPILE_ONLY_WORD,
   ZF_ABORT_INVALID_SIZE,
   ZF_ABORT_DIVISION_BY_ZERO,
+  ZF_ABORT_INTERRUPT,
 } zf_result;
 
 typedef enum

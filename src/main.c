@@ -247,7 +247,7 @@ void program_main()
             continue;
         }
 
-        state.key_released = wait_key_release(200);
+        state.key_released = wait_key_release(500);
 
         if (key >= KEY_F1 && key <= KEY_F6)
         {
