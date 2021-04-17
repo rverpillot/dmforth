@@ -29,7 +29,7 @@ You can use forth words with the functions menu (keys `F1`-`F6` and arrows keys)
 ### Program mode
 To enter or exit: `SHIFT` `PRGM`
 
-In this mode, the keyboard is switched to alpha mode (use `SHIFT` `ALPHA` to switch between uppercase and lowercase). To enter numbers or some operators characters (`+`,`-`, ...), use `SHIFT` and the right key. You can enter up to 6 lines of text, and `ENTER` key evaluate or compile input text.
+In this mode, the keyboard is switched to alpha mode (use `SHIFT` `ALPHA` to switch between uppercase and lowercase). To enter numbers or some operators (`+`,`-`, ...), use `SHIFT` and the right key. You can enter up to 6 lines of text, and `ENTER` key evaluate or compile input text.
 
 ![](docs/prgm.bmp)
 
