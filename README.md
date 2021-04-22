@@ -19,7 +19,7 @@ This is a work in progress. Bugs could crash your calculator !
 ### Normal mode (aka calculator mode)
 In this mode, you can view 5 items of the stack and you have one line of input. Words associated with keys are executed immediately. 
 
-For example, if you enter the number `12` and press `SIN` key, DMFORTH evaluate the line "`12 sin`", so the number `12` is pushed to the stack, and the word `sin` is executed and the result is pushed back to the stack.
+For example, if you enter the number `12` and press `SIN` key, DMFORTH evaluates the line "`12 sin`", so the number `12` is pushed to the stack, and the word `sin` is executed and the result is pushed back to the stack.
 
 You can use forth words with the functions menu (keys `F1`-`F6` and arrows keys).
 
@@ -29,7 +29,7 @@ You can use forth words with the functions menu (keys `F1`-`F6` and arrows keys)
 ### Program mode
 To enter or exit: `SHIFT` `PRGM`
 
-In this mode, the keyboard is switched to alpha mode (use `SHIFT` `ALPHA` to switch between uppercase and lowercase). To enter numbers or some operators (`+`,`-`, ...), use `SHIFT` and the right key. You can enter up to 6 lines of text, and `ENTER` key evaluate or compile input text.
+In this mode, the keyboard is switched to alpha mode (use `SHIFT` `ALPHA` to switch between uppercase and lowercase). To enter numbers or some operators (`+`,`-`, ...), use `SHIFT` and the right key. You can enter up to 6 lines of text, and the `ENTER` key evaluates or compiles input text.
 
 ![](docs/prgm.bmp)
 
@@ -74,7 +74,7 @@ In program mode, The functions menu works in completion mode. As words are trunc
 
 ![](docs/completion.bmp)
 
-you can go back in the history input texts with `SHIFT` and `UP`  or `DOWN` keys. In editor mode, cursor can be moved on the line (TODO: editor mode).
+you can go back in the history input texts with `SHIFT` and `UP`  or `DOWN` keys. In editor mode, cursor can be moved (TODO: editor mode).
 
 
 
@@ -91,8 +91,8 @@ When a word outputs text to LCD display, DMFORTH erase display and switch to out
 
 
 ## FORTH
-- DMFORTH use a modified version of zforth (https://github.com/zevv/zForth). This is not an ANS Forth.
-- DMFORTH use a heap memory block of 64 Ko to store words (32 Ko), PAD zone (16 Ko), data stack and return stack (16 Ko).
+- DMFORTH uses a modified version of zforth (https://github.com/zevv/zForth). This is not an ANS Forth.
+- DMFORTH uses a heap memory block of 64 Ko to store words (32 Ko), PAD zone (16 Ko), data stack and return stack (16 Ko).
 - PAD zone stores temporary strings. When this memory is full, PAD pointer is reset.
 - `s" Hello"` can be written `"Hello"` .
 
